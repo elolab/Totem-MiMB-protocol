@@ -65,7 +65,7 @@ Archived date:
 `http://localhost:8787/`
 
 #### Use the following credentials: 
-`User: rstudio`
+`Username: rstudio`
 
 `Password: Totem`
 
