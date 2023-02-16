@@ -14,6 +14,7 @@ RUN R --no-echo --no-restore --no-save -e "remotes::install_github('elolab/Totem
 RUN R --no-echo --no-restore --no-save -e "BiocManager::install('DelayedMatrixStats')"
 RUN R --no-echo --no-restore --no-save -e "BiocManager::install('Matrix')"
 RUN R --no-echo --no-restore --no-save -e "install.packages('rmarkdown')"
+RUN R --no-echo --no-restore --no-save -e "BiocManager::install('BiocStyle')" 
 
 # Descriptions: 
 MAINTAINER António Sousa (aggode@utu.fi)
