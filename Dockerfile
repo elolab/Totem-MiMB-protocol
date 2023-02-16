@@ -11,6 +11,9 @@ RUN R --no-echo --no-restore --no-save -e "install.packages('BiocManager')"
 RUN R --no-echo --no-restore --no-save -e "BiocManager::install('slingshot')"
 RUN R --no-echo --no-restore --no-save -e "install.packages('remotes')"
 RUN R --no-echo --no-restore --no-save -e "remotes::install_github('elolab/Totem', ref='fc2d20614a1d82459ca38bb98f22bd212922aec3')"
+RUN R --no-echo --no-restore --no-save -e "BiocManager::install('DelayedMatrixStats')"
+RUN R --no-echo --no-restore --no-save -e "BiocManager::install('Matrix')"
+RUN R --no-echo --no-restore --no-save -e "install.packages('rmarkdown')"
 
 # Descriptions: 
 MAINTAINER António Sousa (aggode@utu.fi)
