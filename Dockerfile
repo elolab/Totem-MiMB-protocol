@@ -15,6 +15,7 @@ RUN R --no-echo --no-restore --no-save -e "BiocManager::install('DelayedMatrixSt
 RUN R --no-echo --no-restore --no-save -e "BiocManager::install('Matrix')"
 RUN R --no-echo --no-restore --no-save -e "install.packages('markdown')"
 RUN R --no-echo --no-restore --no-save -e "BiocManager::install('BiocStyle')" 
+RUN R --no-echo --no-restore --no-save -e "BiocManager::install('scran')" 
 
 # Descriptions: 
 MAINTAINER António Sousa (aggode@utu.fi)
