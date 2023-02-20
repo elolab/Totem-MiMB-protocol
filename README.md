@@ -39,7 +39,7 @@ Archived date:
 
 <br>
 
-### Create docker image & launch container: 
+### Create docker image & launch container (locally): 
 
 <br>
 
@@ -74,4 +74,24 @@ Archived date:
 ---
 
 <br>
+
+## Create Singularity image from docker 'scrna-cell-traject' Docker image to running it remotely in a server: 
+
+<br>
+
+#### Check the IMAGE ID of 'scrna-cell-traject': 
+
+`docker images`
+
+#### Create 'imgs' directory and save the tarball 'scrna-cell-ti.tar'
+
+`mkdir imgs`
+
+`sudo docker save 1ec0d22e1823 -o imgs/scrna-cell-tii.tar`
+
+#### Create Singularity image from tarball 'scrna-cell-ti.tar'
+
+`cd imgs`
+
+`sudo singularity build scrna-cell-ti.sif docker-archive://scrna-cell-ti.tar`
 
