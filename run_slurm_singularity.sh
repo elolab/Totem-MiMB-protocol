@@ -1,4 +1,12 @@
 #!/bin/bash
+#SBATCH --partition=long
+#SBATCH --time=3-0:00:00
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=32g
+#SBATCH --output=rstudio-server.job.%j
+
+# COMMENT: this script is based on rocker project: 
+# https://rocker-project.org/use/singularity
 
 workdir=${PWD}
 echo -e "Creating working directory for R session at: ${workdir}\n"
