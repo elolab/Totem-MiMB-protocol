@@ -3,3 +3,7 @@ results
 notebooks/*.html
 notebooks/Totem*
 imgs
+.config
+.local
+rsessions
+rsession.sh

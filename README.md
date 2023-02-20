@@ -87,11 +87,23 @@ Archived date:
 
 `mkdir imgs`
 
-`sudo docker save 1ec0d22e1823 -o imgs/scrna-cell-tii.tar`
+`sudo docker save <IMAGE ID> -o imgs/scrna-cell-ti.tar`
 
 #### Create Singularity image from tarball 'scrna-cell-ti.tar'
 
 `cd imgs`
 
 `sudo singularity build scrna-cell-ti.sif docker-archive://scrna-cell-ti.tar`
+
+#### Upload this repository to the server 
+
+#### Execute the 'run_slurm_singularity.sh' bash script with Slurm to launch the Singularity container
+
+`sbatch ./run_slurm_singularity.sh Totem`
+
+#### Open the file createdi 'slurm-<slurm-job.id>.out' and check the ssh command to type in a new local shell
+
+#### Type the following in the browser and use your user name in the cluster as username and as password 'Totem'
+
+`http://localhost:8787/`
 

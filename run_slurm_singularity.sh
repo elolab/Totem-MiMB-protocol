@@ -23,7 +23,7 @@ END
 
 chmod +x ${workdir}/rsession.sh
 
-export SINGULARITY_BIND="${workdir}:/home/aggs,${workdir}/rsessions/run:/run,${workdir}/rsessions/tmp:/tmp,${workdir}/rsessions/database.conf:/etc/rstudio/database.conf,${workdir}/rsession.sh:/etc/rstudio/rsession.sh,${workdir}/rsessions/var/lib/rstudio-server:/var/lib/rstudio-server"
+export SINGULARITY_BIND="${workdir}:$HOME,${workdir}/rsessions/run:/run,${workdir}/rsessions/tmp:/tmp,${workdir}/rsessions/database.conf:/etc/rstudio/database.conf,${workdir}/rsession.sh:/etc/rstudio/rsession.sh,${workdir}/rsessions/var/lib/rstudio-server:/var/lib/rstudio-server"
 
 # Do not suspend idle sessions.
 # Alternative to setting session-timeout-minutes=0 in /etc/rstudio/rsession.conf
