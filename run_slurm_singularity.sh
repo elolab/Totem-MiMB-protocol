@@ -1,17 +1,17 @@
 #!/bin/bash
-#SBATCH --partition=long
-#SBATCH --time=3-0:00:00
+#SBATCH --partition=normal
+#SBATCH --time=12:00:00
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=32g
-#SBATCH --output=rstudio-server.job.%j
+#SBATCH --output=rsessions/rstudio-server.job.%j
 
 # COMMENT: this script is based on rocker project: 
 # https://rocker-project.org/use/singularity
 
-workdir=${PWD}
-echo -e "Creating working directory for R session at: ${workdir}\n"
-mkdir -p -m 700 ${workdir}/rsessions/run ${workdir}/rsessions/tmp ${workdir}/rsessions/var/lib/rstudio-server
-cat > ${workdir}/rsessions/database.conf <<END
+WORKDIR=${PWD}
+echo -e "Creating working directory for R session at: ${WORKDIR}\n"
+mkdir -p -m 700 ${WORKDIR}/rsessions/run ${WORKDIR}/rsessions/tmp ${WORKDIR}/rsessions/var/lib/rstudio-server
+cat > ${WORKDIR}/rsessions/database.conf <<END
 provider=sqlite
 directory=/var/lib/rstudio-server
 END
@@ -23,15 +23,15 @@ END
 # Set R_LIBS_USER to a path specific to rocker/rstudio to avoid conflicts with
 # personal libraries from any R installation in the host environment
 
-cat > ${workdir}/rsession.sh <<END
+cat > ${WORKDIR}/rsessions/rsession.sh <<END
 #!/bin/sh
 export R_LIBS_USER=R/rocker-rstudio/4.2.1
 exec /usr/lib/rstudio-server/bin/rsession "\${@}"
 END
 
-chmod +x ${workdir}/rsession.sh
+chmod +x ${WORKDIR}/rsessions/rsession.sh
 
-export SINGULARITY_BIND="${workdir}:$HOME,${workdir}/rsessions/run:/run,${workdir}/rsessions/tmp:/tmp,${workdir}/rsessions/database.conf:/etc/rstudio/database.conf,${workdir}/rsession.sh:/etc/rstudio/rsession.sh,${workdir}/rsessions/var/lib/rstudio-server:/var/lib/rstudio-server"
+export SINGULARITY_BIND="${WORKDIR}:$HOME,${WORKDIR}/rsessions/run:/run,${WORKDIR}/rsessions/tmp:/tmp,${WORKDIR}/rsessions/database.conf:/etc/rstudio/database.conf,${WORKDIR}/rsessions/rsession.sh:/etc/rstudio/rsession.sh,${WORKDIR}/rsessions/var/lib/rstudio-server:/var/lib/rstudio-server"
 
 # Do not suspend idle sessions.
 # Alternative to setting session-timeout-minutes=0 in /etc/rstudio/rsession.conf
