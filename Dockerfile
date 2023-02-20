@@ -18,6 +18,7 @@ RUN R --no-echo --no-restore --no-save -e "BiocManager::install('BiocStyle')"
 RUN R --no-echo --no-restore --no-save -e "BiocManager::install('scran')" 
 RUN R --no-echo --no-restore --no-save -e "install.packages('uwot')"
 RUN R --no-echo --no-restore --no-save -e "install.packages('optparse')"
+RUN R --no-echo --no-restore --no-save -e "install.packages('hexbin')"
 
 # Descriptions: 
 MAINTAINER António Sousa (aggode@utu.fi)
