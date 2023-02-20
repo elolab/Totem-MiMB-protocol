@@ -11,7 +11,23 @@ output:
       code_folding: hide
 ---
 
+<br>
+
+<br>
+
+---
+
+<br>
+
+<br>
+
 ## Totem workflow
+
+<br>
+
+In order to run `Totem`, one needs only log normalized single-cell gene expression data. `Totem` is a novel trajectory inference method for tree shaped cell trajectory topologies such as linear, bifurcation, multifurcation or tree-shaped. It relies mainly on two steps: (1) clustering; and (2) MSTs. In between, there are a serial of intermediate steps to handle the data and tune some parameters based on visualizations and user knowledge. `Totem` introduces the concept of "cell connectivity" which consists in the average of how many cells a given cluster is connected to through a set of clustering results which helps the user to identify and support the potential starting and ending points of the trajectory. In this tutorial We will go through the main steps listed below.   
+
+<br>
 
    1. Prepare data
    
@@ -20,10 +36,30 @@ output:
    3. Dimensionality reduction 
    
    4. Clustering
-   
-   6. MSTs
+
+   5. Cell connectivity
+
+   6. Select clusterings
+
+   7. Smooth MSTs
+
+   8. Define a root
+
+   9. Pseudotime 
+
+<br>
+
+<br>
+
+---
+
+<br>
+
+<br>
 
 ## Setup 
+
+<br>
 
 Load R packages and set seed. 
 
@@ -42,7 +78,19 @@ library("dyndimred")
 library("SingleCellExperiment")
 ```
 
+<br>
+
+<br>
+
+---
+
+<br>
+
+<br>
+
 ## Download & import data set
+
+<br>
 
 The applicability of Totem for cell trajectory inference (TI) is demonstrated with a data set that met the following criteria:
 
@@ -73,7 +121,19 @@ The class of `dyn` is essentially a list of objects related with `dynwrap`: `r c
 
 Among the classes printed above, we can see expression and grouping `dynwrap` objects. `dynwrap` is also a R package that we will use to access the data from the `dyn` object. 
 
-## Prepare data
+<br>
+
+<br>
+
+---
+
+<br>
+
+<br>
+
+## (1) Prepare data
+
+<br>
 
 `Totem` requires only log normalized data as input which can be obtained by using common single-cell processing software tools such as `Seurat` [@hao2021integrated] or `scanpy`  [@wolf2018scanpy]. 
 
@@ -136,7 +196,19 @@ sce <- PrepareTotem(object = sce)
 
 The `sce` object created contains the assays `r paste(assayNames(sce), collapse=", ")`, the cell metadata `r colnames(colData(sce))` with `r nrow(sce)` genes and `r ncol(sce)` cells. 
 
-## Feature selection
+<br>
+
+<br>
+
+---
+
+<br>
+
+<br>
+
+## (2) Feature selection
+
+<br>
 
 The next step consists in feature selection. This is not mandatory but highly recommended due to the following reasons: 
 
@@ -156,7 +228,19 @@ hvg <- scran::getTopHVGs(var.genes, n = 2000)
 
 The object `hvg` is a character vector with the names of top 2K HVG (`r paste(head(hvg), collapse=", ")`, ...).
 
-## Dimensionality reduction
+<br>
+
+<br>
+
+---
+
+<br>
+
+<br>
+
+## (3) Dimensionality reduction
+
+<br>
 
 The next step in the workflow consists in dimensionality reduction for clustering purposes downstream of this stage. 
 
@@ -201,7 +285,19 @@ cbind(dim_red, "Cell_type"=sce$Group) %>%
   theme_bw()
 ```
 
-## Clustering 
+<br>
+
+<br>
+
+---
+
+<br>
+
+<br>
+
+## (4) Clustering 
+
+<br>
 
 Clustering is one of the main steps in the `Totem` workflow and the one that takes more time and computational resources. `Totem` is use the 5-dimensional latent representations of LMDS are used to cluster the data set with the k-medoids (CLARA) algorithm using an expected number of clusters varying between 3-20 (`k.range = 3:20`), removing clusters with <5 cells (`min.cluster.size = 5`) and running the clustering algorithm 10K times (`N.clusterings = 10000`). These are the default parameters. After filtering out clustering results due to `min.cluster.size`, the total number of clustering results will be lower than `N.clusterings`. 
 
@@ -212,14 +308,40 @@ sce <- RunClustering(object = sce, k.range = 3:20,
                      min.cluster.size = 5, N.clusterings = 10000)
 ```
 
-## Cell connectivity
+<br>
+
+<br>
+
+---
+
+<br>
+
+<br>
+
+## (5) Cell connectivity
+
+<br>
+
+
 
 ```{r cell connect viz}
 ## Visualization of cell connectivity
 VizCellConnectivity(object = sce, viz.dim.red = dim_red)
 ```
 
-## Select clusterings
+<br>
+
+<br>
+
+---
+
+<br>
+
+<br>
+
+## (6) Select clusterings
+
+<br>
 
 The clustering can be selected based on 5 methods described in detail in the `Totem` vignette (see [vignette](https://htmlpreview.github.io/?https://github.com/elolab/Totem-benchmarking/blob/main/Totem.html#clustering-selection)). You can also see the function documentation by typing the following in the R console: `?SelectClusterings`.
 
@@ -241,7 +363,19 @@ select.clusters <- ReturnTrajNames(sce)
 VizMST(object = sce, clustering.names = select.clusters, viz.dim.red = dim_red)
 ```
 
-## Smooth MSTs
+<br>
+
+<br>
+
+---
+
+<br>
+
+<br>
+
+## (7) Smooth MSTs
+
+<br>
 
 Smooth MSTs using the `slingshot` method [@street2018slingshot]. 
 
@@ -260,7 +394,19 @@ VizSmoothedTraj(object = sce,
                 viz.dim.red = dim_red,plot.pseudotime = FALSE)
 ```
 
-## Define a root 
+<br>
+
+<br>
+
+---
+
+<br>
+
+<br>
+
+## (8) Define a root 
+
+<br>
 
 The highest values of cell connectivity were for cluster 3. Therefore, let's pick the cluster 3 as the root. 
 
@@ -270,7 +416,19 @@ root.cluster <- 3
 sce <- ChangeTrajRoot(object = sce, traj.name = smooth.msts.names[1], root.cluster = root.cluster)
 ```
 
-## Pseudotime
+<br>
+
+<br>
+
+---
+
+<br>
+
+<br>
+
+## (9) Pseudotime
+
+<br>
 
 Visualize pseudotime.
 
@@ -283,7 +441,19 @@ VizSmoothedTraj(object = sce,
                 viz.dim.red = dim_red, plot.pseudotime = TRUE)
 ```
 
+<br>
+
+<br>
+
+---
+
+<br>
+
+<br>
+
 ## Compare against ground-truth
+
+<br>
 
 ```{r compare ground-truth}
 ## Compare Totem pseudotime against ground-truth
@@ -298,11 +468,33 @@ cowplot::plot_grid(
    )
 ```
 
+<br>
+
+<br>
+
+---
+
+<br>
+
+<br>
+
 #### R packages used and respective versions
+
+<br>
 
 ```{r versions, message=FALSE, warning=FALSE, paged.print=FALSE}
 ## R packages and versions used in these analyses
 sessionInfo()
 ```
+
+<br>
+
+<br>
+
+---
+
+<br>
+
+<br>
 
 ## References
