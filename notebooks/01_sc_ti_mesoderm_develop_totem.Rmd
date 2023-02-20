@@ -490,7 +490,7 @@ cowplot::plot_grid(
   (dynplot::plot_dimred(dyn, color_cells = "pseudotime", dimred = dim_red) + 
      ggtitle("Ground-truth")), 
    ncol=2
-   )
+   ) 
 ```
 
 <br>
