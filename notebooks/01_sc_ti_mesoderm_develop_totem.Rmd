@@ -25,7 +25,7 @@ output:
 
 <br>
 
-In order to run `Totem`, one needs only log normalized single-cell gene expression data. `Totem` is a novel trajectory inference method for tree shaped cell trajectory topologies such as linear, bifurcation, multifurcation or tree-shaped. It relies mainly on two steps: (1) clustering; and (2) MSTs. In between, there are a serial of intermediate steps to handle the data and tune some parameters based on visualizations and user knowledge. `Totem` introduces the concept of "cell connectivity" which consists in the average of how many cells a given cluster is connected to through a set of clustering results which helps the user to identify and support the potential starting and ending points of the trajectory. In this tutorial We will go through the main steps listed below.   
+In order to run `Totem`, one needs only log normalized single-cell gene expression data. `Totem` is a novel trajectory inference method for tree-shaped cell trajectory topologies [@smolander2022totem]. It relies mainly on three steps: (1) clustering; (2) Minimum Spanning Trees (MSTs); and (3) smoothing MSTs with the principal curves algorithm. In between these steps, there are a serial of intermediate steps to handle the data and tune some parameters based on visualizations and user knowledge. `Totem` introduces the concept of **cell connectivity** which consists on the average of connections that a cell has through a set of clustering results which helps the user to identify and support the potential starting and ending points of a trajectory. In this tutorial We will go through the main steps which are listed below.   
 
 <br>
 
@@ -35,7 +35,7 @@ In order to run `Totem`, one needs only log normalized single-cell gene expressi
    
    3. Dimensionality reduction 
    
-   4. Clustering
+   4. Clustering (& MST)
 
    5. Cell connectivity
 
@@ -46,6 +46,10 @@ In order to run `Totem`, one needs only log normalized single-cell gene expressi
    8. Define a root
 
    9. Pseudotime 
+
+<br>
+
+`Totem` is a R package published by Smolander et al. (2022) and it is publicly available in github ([https://github.com/elolab/Totem](https://github.com/elolab/Totem)).
 
 <br>
 
@@ -252,10 +256,19 @@ You can skip this step if you have your own low-dimensional representation alrea
 
 ```{r dimred}
 ## Dimensionality reduction
-sce <- RunDimRed(object = sce,
-                 dim.red.method = "lmds",
-                 dim.red.features = hvg,
-                 dim.reduction.par.list = list(ndim=5))
+dimred2cluster <- "pca"
+if (dimred2cluster=="lmds") {
+  sce <- RunDimRed(object = sce,
+                   dim.red.method = "lmds",
+                   dim.red.features = hvg,
+                   dim.reduction.par.list = list(ndim=5))
+}
+if (dimred2cluster=="pca") {
+  sce <- RunDimRed(object = sce,
+                   dim.red.method = "pca",
+                   dim.red.features = hvg,
+                   dim.reduction.par.list = list(ndim=30))
+}
 ```
 
 In case you have already your own low-dimensional representation, just add it to the SCE object
@@ -295,11 +308,11 @@ cbind(dim_red, "Cell_type"=sce$Group) %>%
 
 <br>
 
-## (4) Clustering 
+## (4) Clustering (& MST)
 
 <br>
 
-Clustering is one of the main steps in the `Totem` workflow and the one that takes more time and computational resources. `Totem` is use the 5-dimensional latent representations of LMDS are used to cluster the data set with the k-medoids (CLARA) algorithm using an expected number of clusters varying between 3-20 (`k.range = 3:20`), removing clusters with <5 cells (`min.cluster.size = 5`) and running the clustering algorithm 10K times (`N.clusterings = 10000`). These are the default parameters. After filtering out clustering results due to `min.cluster.size`, the total number of clustering results will be lower than `N.clusterings`. 
+Clustering is one of the main steps in the `Totem` workflow and the one that takes more time and computational resources. `Totem` is use the 5-dimensional latent representations of LMDS are used to cluster the data set with the k-medoids (CLARA) algorithm using an expected number of clusters varying between 3-20 (`k.range = 3:20`), removing clusters with <5 cells (`min.cluster.size = 5`) and running the clustering algorithm 10K times (`N.clusterings = 10000`). These are the default parameters. After filtering out clustering results due to `min.cluster.size`, the total number of clustering results will be lower than `N.clusterings`. At this stage, it is also estimated a MST (Minimum Spanning Tree) for each clustering result. 
 
 ```{r cluster}
 ## Clustering scRNA-seq data w/ CLARA (k-medoids)
@@ -322,7 +335,13 @@ sce <- RunClustering(object = sce, k.range = 3:20,
 
 <br>
 
+**Cell connectivity** is a novel concept introduced in `Totem`. For a given clustering result and the respective MST (Minimum Spanning Trees) , the connectivity of a cell cluster consists in the ratio of its connections to other clusters by the total number of clusters. The cell connectivity is scaled by the maximum value and averaged across a set of clustering and MST results (by default 1K). Higher the value farther the distance for the leafs/ending points of the trajectory and, thus, more likely to represent, e.g., bifurcations points (see Fig.4 [@smolander2022totem]).
 
+The **cell connectivity** unit can be used for two purposes: 
+
+   (1) support the user decision about the most likely trajectory
+   
+   (2) **selecting clustering** results method (see next section)
 
 ```{r cell connect viz}
 ## Visualization of cell connectivity
@@ -345,7 +364,11 @@ VizCellConnectivity(object = sce, viz.dim.red = dim_red)
 
 The clustering can be selected based on 5 methods described in detail in the `Totem` vignette (see [vignette](https://htmlpreview.github.io/?https://github.com/elolab/Totem-benchmarking/blob/main/Totem.html#clustering-selection)). You can also see the function documentation by typing the following in the R console: `?SelectClusterings`.
 
-Here, We selected the top 5 models with the method 3 which was demonstrated to perform well compared with other methods [@smolander2022totem].
+Here, We selected the top 5 models with the method 3 which was demonstrated to perform well compared with other methods [@smolander2022totem]. Method 3 relies on the average of two metrics to select the top 5, i.e., `selection.N.models=5`, best clusterings, i.e., the clustering results that are more congruent and agree better with the tree structure:
+
+   1. VRC (Variance Ratio Criterion) or _Calinski-Harabasz score_: it measures the within- and between-cluster dispersion
+   
+   2. cell connectivity: _see above_
 
 ```{r select clusters}
 ## Select best clusters for MST calculation
@@ -373,11 +396,11 @@ VizMST(object = sce, clustering.names = select.clusters, viz.dim.red = dim_red)
 
 <br>
 
-## (7) Smooth MSTs
+## (7) Smoothing MSTs
 
 <br>
 
-Smooth MSTs using the `slingshot` method [@street2018slingshot]. 
+Smoothing MSTs using the principle curves `slingshot` algorithm [@street2018slingshot] resulting in directory trajectories randomly rooted and discrete pseudotime along the lineage. The user can provide in the next step the root.  
 
 ```{r smooth msts}
 ## Smoothing MSTs selected w/ Slingshot
@@ -408,11 +431,11 @@ VizSmoothedTraj(object = sce,
 
 <br>
 
-The highest values of cell connectivity were for cluster 3. Therefore, let's pick the cluster 3 as the root. 
+At this stage the root can be defined be giving the cluster number. Let's define cluster 4 as root. 
 
 ```{r root}
 ## Define the root of the cell trajectory
-root.cluster <- 3
+root.cluster <- 4
 sce <- ChangeTrajRoot(object = sce, traj.name = smooth.msts.names[1], root.cluster = root.cluster)
 ```
 
@@ -430,7 +453,7 @@ sce <- ChangeTrajRoot(object = sce, traj.name = smooth.msts.names[1], root.clust
 
 <br>
 
-Visualize pseudotime.
+Pseudotime can be highlighted in the low dimensional projection below.
 
 ```{r viz pseudotime}
 VizSmoothedTraj(object = sce,
@@ -454,6 +477,8 @@ VizSmoothedTraj(object = sce,
 ## Compare against ground-truth
 
 <br>
+
+Since we are using a data set for which is known is truth pseudotime and respective trajectory, We compare below this "ground-truth" with the result predicted by `Totem` (on the left side). 
 
 ```{r compare ground-truth}
 ## Compare Totem pseudotime against ground-truth
