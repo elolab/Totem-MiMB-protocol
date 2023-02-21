@@ -11,6 +11,11 @@ output:
       code_folding: hide
 ---
 
+<style>
+body {
+text-align: justify}
+</style>
+
 <br>
 
 <br>
@@ -104,7 +109,7 @@ The applicability of Totem for cell trajectory inference (TI) is demonstrated wi
    
    3. with tree-shaped cell trajectory topology;
    
-   4. real world data (non-simulate). 
+   4. real world data (non-simulated). 
    
 A set of data sets that meet all these criteria were made publicly available by the [dynverse benchmarking](https://github.com/dynverse/dynbenchmark) team [@saelens2019comparison] on _Zenodo_: [https://zenodo.org/record/1443566#.Y-83vGFByrx](https://zenodo.org/record/1443566#.Y-83vGFByrx). Among the ones that met the criteria, we selected the data set: `mesoderm-development_loh` (link to [download](https://zenodo.org/record/1443566/files/real/gold/mesoderm-development_loh.rds?download=1)).
    
@@ -267,7 +272,7 @@ if (dimred2cluster=="pca") {
   sce <- RunDimRed(object = sce,
                    dim.red.method = "pca",
                    dim.red.features = hvg,
-                   dim.reduction.par.list = list(ndim=30))
+                   dim.reduction.par.list = list(ndim=10))
 }
 ```
 
