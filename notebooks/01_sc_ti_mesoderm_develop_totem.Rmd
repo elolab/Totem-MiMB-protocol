@@ -261,7 +261,7 @@ You can skip this step if you have your own low-dimensional representation alrea
 
 ```{r dimred}
 ## Dimensionality reduction
-dimred2cluster <- "pca"
+dimred2cluster <- "lmds"
 if (dimred2cluster=="lmds") {
   sce <- RunDimRed(object = sce,
                    dim.red.method = "lmds",
