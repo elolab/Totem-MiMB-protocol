@@ -8,3 +8,4 @@ imgs
 rsessions
 rsession.sh
 R
+notebooks/*_TESTING.Rmd
