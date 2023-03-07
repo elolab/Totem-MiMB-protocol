@@ -3,9 +3,11 @@ results
 notebooks/*.html
 notebooks/Totem*
 imgs
-.config
-.local
 rsessions
 rsession.sh
 R
-notebooks/*_TESTING.Rmd
+.config
+.local
+.conda
+.Rhistory
+.python_history
