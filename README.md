@@ -33,15 +33,18 @@ Archived date:
 
    + results: results generated during analyses
 
+   + `run_docker.sh`: bash script to launch `repro-totem-ti` docker image  
+
+   + `run_slurm_singularity.sh`: bash script to submit a job to Slurm workload manager and launch the `repro-totem-ti` singularity image 
+   + `rmd_to_rscript.R`: bash script to convert Rmd notebooks into R scripts
+
 <br>
 
 ---
 
 <br>
 
-### Create docker image & launch container (locally): 
-
-<br>
+>Create docker image & launch container (locally) 
 
 #### Build 'repro-totem-ti' Docker image: 
 `docker build -t repro-totem-ti .`
@@ -78,9 +81,7 @@ Archived date:
 
 <br>
 
-## Create Singularity image from docker 'repro-totem-ti' Docker image to running it remotely in a server 
-
-<br>
+>Create Singularity image from docker 'repro-totem-ti' Docker image to running it remotely in a server 
 
 #### Check the IMAGE ID of 'repro-totem-ti': 
 `docker images`
