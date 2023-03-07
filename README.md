@@ -43,10 +43,10 @@ Archived date:
 
 <br>
 
-#### Build 'scrna-cell-traject' Docker image: 
-`docker build -t scrna-cell-traject .`
+#### Build 'repro-totem-ti' Docker image: 
+`docker build -t repro-totem-ti .`
 
-#### List the Docker image - 'scrna-cell-traject' (under REPOSITORY):
+#### List the Docker image - 'repro-totem-ti' (under REPOSITORY):
 `docker images -a`
 
 #### Create directory structure: 
@@ -59,7 +59,10 @@ Archived date:
 
 `	-v $PWD/notebooks:/home/rstudio/notebooks -v $PWD/results:/home/rstudio/results \`
 	
-`	scrna-cell-traject`
+`	repro-totem-ti`
+
+#### Run the bash script `run_docker.sh` as an alternative to the command above (optional):
+`./run_docker.sh`
 
 #### Type the following hyperlink in the browser: 
 `http://localhost:8787/`
@@ -75,35 +78,30 @@ Archived date:
 
 <br>
 
-## Create Singularity image from docker 'scrna-cell-traject' Docker image to running it remotely in a server: 
+## Create Singularity image from docker 'repro-totem-ti' Docker image to running it remotely in a server 
 
 <br>
 
-#### Check the IMAGE ID of 'scrna-cell-traject': 
-
+#### Check the IMAGE ID of 'repro-totem-ti': 
 `docker images`
 
-#### Create 'imgs' directory and save the tarball 'scrna-cell-ti.tar'
-
+#### Create 'imgs' directory and save the tarball 'repro-totem-ti.tar':
 `mkdir imgs`
 
-`sudo docker save <IMAGE ID> -o imgs/scrna-cell-ti.tar`
+`sudo docker save <IMAGE ID> -o imgs/repro-totem-ti.tar`
 
-#### Create Singularity image from tarball 'scrna-cell-ti.tar'
-
+#### Create Singularity image from tarball 'repro-totem-ti.tar':
 `cd imgs`
 
-`sudo singularity build scrna-cell-ti.sif docker-archive://scrna-cell-ti.tar`
+`sudo singularity build repro-totem-ti.sif docker-archive://repro-totem-ti.tar`
 
-#### Upload this repository to the server 
+#### Upload this repository to the server
 
-#### Execute the 'run_slurm_singularity.sh' bash script with Slurm to launch the Singularity container
-
+#### Execute the 'run_slurm_singularity.sh' bash script with Slurm to launch the Singularity container:
 `sbatch ./run_slurm_singularity.sh Totem`
 
 #### Open the file createdi 'slurm-<slurm-job.id>.out' and check the ssh command to type in a new local shell
 
-#### Type the following in the browser and use your user name in the cluster as username and as password 'Totem'
-
+#### Type the following in the browser and use your user name in the cluster as username and as password 'Totem':
 `http://localhost:8787/`
 
