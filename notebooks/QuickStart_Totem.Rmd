@@ -1,0 +1,428 @@
+---
+title: "Quick start guide of single-cell TI with Totem"
+author: "Elo lab - <https://elolab.utu.fi>"
+date: "`r format(Sys.Date(), '%d/%m/%Y')`"
+bibliography: references.bib
+output: 
+   html_document:
+      toc: true 
+      toc_float: true
+      theme: united
+      code_folding: show
+---
+
+<style>
+body {
+text-align: justify}
+</style>
+
+<br>
+
+<br>
+
+---
+
+<br>
+
+<br>
+
+## QuickStart
+
+<br>
+
+This tutorial is a quick start guide with `Totem`, a user-friendly tree-shaped single-cell trajectory inference (TI) method [@smolander2022totem]. The minimum requirement to run `Totem` is a low-dimensional result, such as tSNE or UMAP, as far as this low-dimensional representation represents fairly the cell dynamic process in study, e.g., cell cycle, activation or differentiation. 
+
+Commonly one is interested in inferring cell trajectory after running an integration and/or clustering analysis. In either case the scRNA-seq data was most likely projected onto the low-dimensional space, such as PCA and UMAP, along the analysis. Under this scenario, the user might be interested in preserving these low-dimensional reductions during the cell TI analysis. 
+
+With this in mind, this quick start guide applies `Totem`'s TI to a scRNA-seq data set of **CD34+ bone marrow cells** (replicate 1) used as an example in the `Palantir`'s TI publication [@palantir] and publicly available at Human Cell Atlas Portal (link: [https://data.humancellatlas.org/explore/projects/091cf39b-01bc-42e5-9437-f419a66c8a45](https://data.humancellatlas.org/explore/projects/091cf39b-01bc-42e5-9437-f419a66c8a45)). The processed data set with tSNE projection, cluster identities,`palantir` pseudotime, transformed log-normalized and raw data provided at [human_cd34_bm_rep1.h5ad](https://data.humancellatlas.org/explore/projects/091cf39b-01bc-42e5-9437-f419a66c8a45/project-matrices) will be used for demonstration of the user-friendliness and experience of `Totem`'s TI analysis. 
+
+The content of this tutorial is enumerated and described below. 
+
+<br>
+
+   1. Preprocessing: importing data to R and preparing it to `Totem`
+   
+   2. `Totem`'s TI: two-step `Totem`'s TI workflow: 
+   
+      2.1. clustering & multiple spanning trees (MSTs) 
+      
+      2.2. smoothing selected clustering/MSTs 
+   
+   3. Visualization: visualizing `Totem`'s cell connectivity, clustering, re-rooting and trajectory's topology 
+
+   4. Pseudotime comparison: comparing `Totem` vs `Palantir` pseudotimes
+
+<br>
+
+<br>
+
+---
+
+<br>
+
+<br>
+
+## (1) Preprocessing 
+
+<br>
+
+Load the following `R` packages. 
+
+```{r packages, message=FALSE, warning=FALSE}
+# Load packages
+library("dplyr")
+library("Totem")
+library("scater")
+library("ggplot2")
+library("zellkonverter")
+library("SingleCellExperiment")
+```
+
+<br>
+
+<details><summary><i>What does every package?</i></summary><p> 
+
+   + `dplyr` v.`r packageVersion("dplyr")` [@dplyr]: data wrangling, e.g., _piping_ data with `%>%`
+   
+   + `ggplot2` v.`r packageVersion("ggplot2")` [@ggplot2]: data visualization 
+   
+   + `Totem` v.`r packageVersion("Totem")` [@smolander2022totem]: trajectory inference
+   
+   + `scater` v.`r packageVersion("scater")` [@scater]: `Bioconductor` scRNA toolkit - used for low-dimensional visualization
+   
+   + `zellkonverter` v.`r packageVersion("zellkonverter")` [@zellkonverter]: `Bioconductor` toolbox to convert between scRNA-seq objects - used to import `Anndata` objects into `R` as `SingleCellExperiment` object 
+   
+   + `SingleCellExperiment` v.`r packageVersion("SingleCellExperiment")` [@singlecellexperiment]: `Bioconductor` single-cell data object - `R` class object used to interact with `Totem`    
+
+</p></details>
+
+<br>
+
+Set seed to keep the reproducibility of the analyses generated. 
+
+```{r seed}
+# Set seed
+set.seed(1204)
+```
+   
+<br> 
+   
+Download and import the data as `SingleCellExperiment` class object with the function `readH5AD`` (from the `zellkonverter` package). 
+
+```{r download & import datasets, message=FALSE, warning=FALSE}
+## Download the anndata object 'human_cd34_bm_rep1.h5ad' from HCA Portal: 
+# https://data.humancellatlas.org/explore/projects/091cf39b-01bc-42e5-9437-f419a66c8a45
+data.dir <- "../data/quickstart" # create folder to save the data 
+dir.create(path = data.dir, recursive = TRUE)
+file2down <- file.path(data.dir, "human_cd34_bm_rep1.h5ad") # path to save the file
+
+# Check if the data exists locally before attempting to download it
+if (!file.exists(file2down)) { # the link to download expires, thus it needs to be updated
+  url2down <- "https://storage.googleapis.com/datarepo-4ef3f5a3-bucket/0e5e329e-2709-4ceb-bfe3-97d23a652ac0/3428f967-3376-4051-b6f7-8dd84580ca5b/human_cd34_bm_rep1.h5ad?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=datarepo-jade-api%40terra-datarepo-production.iam.gserviceaccount.com%2F20230302%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20230302T141550Z&X-Goog-Expires=900&X-Goog-SignedHeaders=host&requestedBy=azul-ucsc-0-public-prod%40platform-hca-prod.iam.gserviceaccount.com&userProject=datarepo-1dbff5cd&X-Goog-Signature=2c5c19abfe88e1d2d2fd7e50c3135e878f757183ddf383fa43e12285338998f1419dfb73dd4185a89ea9135a696feb65042fee38c4d833f7cf255af4b2e4be53a6c0ff8ab2f653c7ca1843fd31e850ad7d8532d598ca44b074c47d1dc80eb508a4ae8f843f8ba12869cc88f51037c50cd802c02061f9bd8ff1de3bd082b61135f635468c643bdf73d04b8f2ede122d5871848b519b10cc6d56bb3b03cdcd7bfc8996e23f4fe3b8685b51f5770d5c62466388cd1f77eaf2b29242faae3612f21e949600fc03cce94b1c97c050f9fc53aedd500966de0221a429a4541c62b3a81f8024182dfe177d78d1ea008757ca839a726dda6f975c5d34c0ac9ff3034d9b18"
+  download.file(url = url2down, destfile = file2down)
+}
+
+## Import the anndata '.h5ad' object as SCE object
+sce <- readH5AD(file = file2down, X_name = "scaled", raw = TRUE)
+```
+
+<br>
+
+<details><summary><i>What is a `SingleCellExperiment` class object?</i></summary><p> 
+
+`Totem` conveniently uses the `SingleCellExperiment` (`SCE` for short) `R` package and class to store all the information that generates in its workflow. This can be accessed through: `metadata(sce)$Totem` (which returns a list of objects generated in the `Totem` workflow). 
+
+A `SCE` object can store several gene expression assays (raw, log counts, etc), metadata (cell/gene) and dimensional reduction data. Please have a look into the [Chapter 4 The SingleCellExperiment class](https://bioconductor.org/books/3.17/OSCA.intro/the-singlecellexperiment-class.html) of the [OSCA](https://bioconductor.org/books/3.17/OSCA.intro/) book to learn more about the `SingleCellExperiment` class and functionality.  
+
+</p></details>
+
+<br>
+
+`Totem` uses the first dimensional reduction result found in the `SCE` object which in this tutorial was named `sce`. The `sce` object possesses the following dimensional reductions (`reducedDimNames(sce)`): `r paste(reducedDimNames(sce), collapse=", ")`. Since `tsne` is the first dimensional reduction and the projection that will be used for clustering, the other reductions could be ignored. Although, since the other reductions are not being used, they can be removed for clarity. 
+
+In addition, `Totem` checks if the assay `logcounts` is present to apply some of its visualization functions. If it is not present, it complains and fails to run those visualization functions. Since the `sce` also possesses the `raw` count data in `altExp(sce, "raw")`, this can be converted into `logcounts`. 
+
+```{r remove reductions & logcounts, echo=TRUE, message=FALSE, warning=FALSE}
+## Remove unnecessary reductions
+reducedDims(sce)[c("MAGIC_imputed_data", "palantir_branch_probs")] <- NULL
+
+## logcounts
+stopifnot(all(colnames(altExp(sce, "raw"))==colnames(sce)))
+stopifnot(all(row.names(altExp(sce, "raw"))==row.names(sce)))
+counts <- assay(altExp(sce, "raw"), "X")
+log.counts <- apply(counts, 2, function(x) log1p(x/sum(x)*10000)) # log1p normalization w/ 10K scaling factor
+assay(sce, "logcounts") <- as(log.counts, "sparseMatrix")
+rm(list = c("counts", "log.counts")) # remove unnecessary objects
+```
+
+<br>
+
+Next the cell cluster annotations are added and the cluster color names fixed. 
+
+```{r cell cluster annot}
+## Cell cluster annotations
+# Format names of the cluster colors of original clusters
+names(metadata(sce)$cluster_colors) <- levels(sce$clusters) 
+
+# Add cell annotations based on github issue: 
+# https://github.com/dpeerlab/Palantir/issues/40
+cluster2annot.long <- c("0" = "Hematopoietic stem cells", "1" = "Hematopoietic multipotent progenitors", 
+                        "2" = "Erythroid progenitors", "3" = "Monocyte progenitors", 
+                        "4" = "Myeloid progenitors", "5" = "Common lymphoid progenitors", 
+                        "6" = "Monocyte progenitors", "7" = "Dendritic cell progenitors", 
+                        "8" = "Erythroid progenitors", "9" = "Megakaryocyte progenitors")
+cluster2annot.short <- c("0" = "HSC", "1" = "HMP", "2" = "EP", "3" = "MoP", 
+                         "4" = "MyP", "5" = "CLP", "6" = "MP", "7" = "DCP", 
+                         "8" = "EP", "9" = "MKP")
+colData(sce)$cell_types_long <- colData(sce)$clusters
+levels(colData(sce)$cell_types_long) <- cluster2annot.long
+colData(sce)$cell_types_short <- colData(sce)$clusters
+levels(colData(sce)$cell_types_short) <- cluster2annot.short
+```
+
+
+<br>
+
+<br>
+
+---
+
+<br>
+
+<br>
+
+## (2) `Totem`'s TI
+
+<br>
+
+The two-step `Totem`'s TI workflow consists: 
+
+   1. clustering & multiple spanning trees (MSTs): `RunClustering(...)`
+   
+   2. smoothing selected clustering/MSTs: `SelectClusterings(...)` followed by `RunSmoothing(...)`
+
+<br>
+
+The only input required is the `SingleCellExperiment` object named `sce` with a low-dimensional reduction result in `reducedDim(sce)`, which in this case is a `tsne` with two dimensions (run the following to see the first tSNE 6 cell coordinates - `head(reducedDim(sce))`).  
+
+```{r Totem TI wkf}
+## Totem's TI workflow: 
+# (1) clustering dimensional reduction w/ CLARA (k-medoids), MSTs 
+# (2) smoothing best clustering/MSTs w/ principal curves algorithm
+set.seed(123) # keep reproducibility
+sce <- RunClustering(object = sce) %>% 
+  SelectClusterings(object = .) %>% 
+  RunSmoothing(object = .)
+```
+
+<br>
+
+<details><summary><i>What does `%>%` mean/do?</i></summary><p> 
+
+The expression `%>%` is a pipe. Pipes are a convenient computational way of passing the output generated by the previous command to the input of the next command. If you're not familiar with pipes (`%>%` coming from the package `dplyr`), you can run the equivalent to the previous code without using pipes. 
+
+```{r Totem TI wkf - w/o pipes, eval=FALSE, include=TRUE}
+## Totem's TI workflow: 
+# (1) clustering dimensional reduction w/ CLARA (k-medoids), MSTs 
+# (2) smoothing best clustering/MSTs w/ principal curves algorithm
+set.seed(123) # keep reproducibility
+sce <- RunClustering(object = sce) 
+sce <- SelectClusterings(object = sce) 
+sce <- RunSmoothing(object = sce)
+```
+
+</p></details>
+
+<br>
+
+<details><summary><i>What does every individual function above?</i></summary><p>
+
+   + `RunClustering(...)`: It performs clustering and MSTs. Clustering is one of the main steps in the `Totem` workflow and the one that takes more time and computational resources. `Totem` uses the dimensional latent representations provided in `reducedDim(sce)` to cluster the data set 10K times (`N.clusterings = 10000`) with the k-medoids (CLARA) algorithm using an expected number of clusters varying between 3-20 (`k.range = 3:20`). It filters out clusters with <5 cells (`min.cluster.size = 5`). All the parameters mentioned are the default and they can be changed. After filtering out clustering results due to `min.cluster.size`, the total number of clustering results will be lower than `N.clusterings`. At this stage, it is also estimated a MST for each clustering result. 
+
+   + `SelectClusterings(...)`: `Totem` performs a large number of clustering results as part of its approach. Since they can not be all inspected manually, `Totem` provides 5 methods to select the top clustering results (by default 1 - `selection.N.models = 1`). All the methods are described in detail in the `Totem` vignette (see [vignette](https://htmlpreview.github.io/?https://github.com/elolab/Totem-benchmarking/blob/main/Totem.html#clustering-selection)). You can also see the function documentation by typing the following in the R console: `?SelectClusterings`. The default method used was method 1 (`selection.method = 1`) which uses the Variance Ratio Criterion (VRC, aka _Calinski-Harabasz score_), which measures the within- and between-cluster dispersion, to select the best clustering result. 
+
+   + `RunSmoothing(...)`: Smoothing the top selected MST(s) using the principle curves `slingshot` algorithm [@street2018slingshot] resulting in directed trajectories randomly rooted and discrete pseudotime along the lineage. The user can adjust the root later.  
+
+</p></details>
+
+<br>
+
+<br>
+
+---
+
+<br>
+
+<br>
+
+## (3) Visualization
+
+<br>
+
+The `Totem`'s cell connectivities, clustering/MST, trajectory and pseudotime can be visual inspected after running `Totem`'s TI method.  
+
+<br>
+
+<br>
+
+### Cell connectivity
+
+<br>
+
+**Cell connectivity** is a novel concept introduced in `Totem`. For a given clustering result and the respective MST, the connectivity of a cell cluster consists in the ratio of its connections to other clusters by the number of clusters. Higher the value farther the distance for the leafs/ending points of the trajectory and, thus, more likely to represent, e.g., branching points (see Fig.4 [@smolander2022totem]).
+
+`Totem` relies on the `dynplot` [@dynplot] package for visualization which requires to give the dimensional reduction result as a parameter (`viz.dim.red`). Thus the tSNE dimensional reduction is first retrieved from the `sce` object with `dim_red <- reducedDim(sce, "tsne")` and given as parameter (``viz.dim.red = dim_red`) to the function `VizCellConnectivity()` together with the `sce` object to plot cell connectivities.
+
+```{r cell connect viz}
+## Visualization of cell connectivity
+dim_red <- reducedDim(sce, "tsne") # retrieve tSNE
+VizCellConnectivity(object = sce, viz.dim.red = dim_red) # plot
+```
+
+<br>
+
+The cell connectivity plot suggests that HSC and MyP are branching points during hematopoiesis. 
+
+<br>
+
+<br>
+
+### Clustering/MST
+
+<br>
+
+Next the best clustering and MST can be inspected with the function `VizMST()`. The name of the best clustering and MST needs to be retrieved (`select.cluster <- names(metadata(sce)$totem$slingshot_trajectory)`) and given as parameter (`clustering.names = select.cluster`). In addition, the `sce` object and tSNE result (`viz.dim.red = dim_red)`) are also given. 
+
+In the code below it is also plotted the `Palantir`'s cluster and cell types abbreviated. For this end it is used the function `plotReducedDim()` from the `scater` package (read more about the function `?plotReducedDim`).
+
+```{r clustering MST viz, fig.width=14, fig.height=6}
+## Visualization of clustering/MST
+select.cluster <- names(metadata(sce)$totem$slingshot_trajectory) # retrieve the name of the best cluster
+cowplot::plot_grid(
+  plotReducedDim(sce, dimred = "tsne", color_by = "clusters") + 
+    scale_color_manual(name= "Clusters", values=unlist(metadata(sce)$cluster_colors)) + 
+    ggtitle("Palantir's clusters") + 
+    theme_void() + 
+    theme(legend.position = "bottom"),
+  plotReducedDim(sce, dimred = "tsne", color_by = "cell_types_short") +
+    scale_color_manual(name= "Cell Types", 
+                       values=as.character(unlist(metadata(sce)$cluster_colors)[!duplicated(cluster2annot.short)])) +
+    ggtitle("Cell types") + 
+    theme_void() + 
+    theme(legend.position = "bottom"),
+  VizMST(object = sce, clustering.names = select.cluster, viz.dim.red = dim_red), 
+  ncol=3, align = "v"
+)
+```
+
+<br>
+
+<br>
+
+### Rooting
+
+<br>
+
+At this stage the root can be defined be giving the cluster number. From the plots visualized above cluster 15 seems to be a good candidate for the root which corresponds to the more imature HSC cell type (Hematopoietic stem cells). 
+
+The `ChangeTrajRoot()` allows us to change the root by providing the name of the clustering/MST result (`traj.name = select.cluster`) and the cluster number that should be root (`root.cluster = root.cluster`).
+
+This step can be skipped, but, in that case, the root will be randomly assigned. 
+
+```{r root}
+## Define the root of the cell trajectory
+root.cluster <- 15
+sce <- ChangeTrajRoot(object = sce, traj.name = select.cluster, root.cluster = root.cluster)
+```
+
+<br>
+
+<br>
+
+### Pseudotime
+
+<br>
+
+The smoothed, rooted and directed trajectory for the best clustering/MST result with (`plot.pseudotime = TRUE`) or without (`plot.pseudotime = FALSE`) pseudotime can be highlighted below with the function `VizSmoothedTraj()`.
+
+```{r viz pseudotime}
+cowplot::plot_grid(
+  VizSmoothedTraj(object = sce,
+                  traj.names = select.cluster,
+                  viz.dim.red = dim_red, plot.pseudotime = FALSE),
+  VizSmoothedTraj(object = sce,
+                  traj.names = select.cluster,
+                  viz.dim.red = dim_red, plot.pseudotime = TRUE), 
+  ncol=2
+)
+```
+
+<br>
+
+<br>
+
+---
+
+<br>
+
+<br>
+
+## (4) Pseudotime comparison
+
+<br>
+
+`Totem`'s pseudotime (on the left side) can be compared with `Palantir`'s pseudotime (on the right side). The _Pearson_'s correlation between pseudotimes was `r round(cor(sce$palantir_pseudotime, dynwrap::calculate_pseudotime(metadata(sce)$totem$dynwrap_trajectory[[select.cluster]])), 2)`. 
+
+```{r compare ground-truth, fig.width=12}
+## Compare Totem pseudotime against ground-truth
+cowplot::plot_grid(
+  (VizSmoothedTraj(object = sce,
+                traj.names = select.cluster,
+                viz.dim.red = dim_red, plot.pseudotime = TRUE) + 
+     ggtitle("Totem")),
+  (plotReducedDim(sce, dimred = "tsne", colour_by = "palantir_pseudotime") + 
+      ggtitle("Palantir's pseudotime")) + 
+    theme_void() + 
+    theme(legend.position = "bottom"), 
+   ncol=2
+   ) 
+```
+
+<br>
+
+Despite the good correlation between pseudotime obtained between `Totem`'s and `Palantir`'s and the correct prediction of terminal states once the root was provided, the lymphoid lineage was wrongly predicted. CLP (Common Lymphoid Progenitor) should had been diverging from HSC (Hematopoietic stem cells). 
+
+One of the reasons that may explain this wrong prediction is how well the low-dimensional representation used for clustering fairly represents the relationship between cell types. The CLP population appears farther apart from the HSC than the cluster MyP (Myeloid Progenitor) in the two-dimensional tSNE projection making more likely to branch from the latter than the former.  
+
+In general, the user should be very critical about lineages towards cell populations/clusters that do not show a continuous development in the dimensional reduction projection used for clustering. 
+ 
+<br>
+
+<br>
+
+---
+
+<br>
+
+<br>
+
+#### R packages used and respective versions
+
+<br>
+
+```{r versions, message=FALSE, warning=FALSE, paged.print=FALSE}
+## R packages and versions used in these analyses
+sessionInfo()
+```
+
+<br>
+
+<br>
+
+---
+
+<br>
+
+<br>
+
+## References
