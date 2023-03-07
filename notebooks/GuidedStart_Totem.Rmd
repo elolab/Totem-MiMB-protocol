@@ -1,0 +1,631 @@
+---
+title: "Guided start of single-cell TI with Totem"
+author: "Elo lab - <https://elolab.utu.fi>"
+date: "`r format(Sys.Date(), '%d/%m/%Y')`"
+bibliography: references.bib
+output: 
+   html_document:
+      toc: true 
+      toc_float: true
+      theme: united
+      code_folding: show
+---
+
+<style>
+body {
+text-align: justify}
+</style>
+
+<br>
+
+<br>
+
+---
+
+<br>
+
+<br>
+
+## GuidedStart
+
+<br>
+
+This tutorial is a detailed starting guide with `Totem`, a user-friendly tree-shaped single-cell trajectory inference (TI) method [@smolander2022totem]. In the quick start guide it is shown the application of `Totem`'s TI method under a scenario where one is interested in inferring cell trajectory after running an integration and/or clustering analysis and the data has already been projected onto the low-dimensional space, such as PCA and UMAP. In this detailed starting guide, the aim is to start from the count matrix to trajectory inference providing along the way a better description and exploration of the intermediate results generated.   
+
+To this end, `Totem`'s TI was applied to the same data set analyzed in the quick start guide, a **CD34+ bone marrow cells** (replicate 1) data set that was used as an example in the `Palantir`'s TI publication [@palantir] and publicly available at Human Cell Atlas Portal (link: [https://data.humancellatlas.org/explore/projects/091cf39b-01bc-42e5-9437-f419a66c8a45](https://data.humancellatlas.org/explore/projects/091cf39b-01bc-42e5-9437-f419a66c8a45)). The data provided comprises tSNE projection, cluster identities,`palantir` pseudotime, transformed log-normalized and raw data (the `anndata` object can be found at [human_cd34_bm_rep1.h5ad](https://data.humancellatlas.org/explore/projects/091cf39b-01bc-42e5-9437-f419a66c8a45/project-matrices)). 
+
+The content of this tutorial is enumerated and described below. 
+
+<br>
+
+   1. Prepare data: importing data to R and preparing it to `Totem`
+   
+   2. Feature selection: selecting 2K highly variable features for dimensional reduction with `scran`
+   
+   3. Dimensional reduction: running dimensional reduction for clustering (PCA) and visualization (UMAP) with `Totem`
+   
+   4. Clustering & MST: running CLARA _k_-medoids clustering algorithm and multiple spanning trees (MSTs) with `Totem` 
+
+   5. Cell connectivity: visualize and interpret cell connectivity estimated by `Totem`
+
+   6. Select clustering: selecting and visualizing top 10 clustering and MST results with `Totem`
+
+   7. Smooth MST: smoothing the selected MSTs with the principal curves algorithm with `Totem`
+
+   8. Define a root: define the most probable root for the inferred trajectory 
+
+   9. Pseudotime: visualize `Totem`'s pseudotime and compare it with `Palantir`'s 
+
+<br>
+
+`Totem` is a R package published by Smolander et al. (2022) and it is publicly available in github ([https://github.com/elolab/Totem](https://github.com/elolab/Totem)).
+
+<br>
+
+<br>
+
+---
+
+<br>
+
+<br>
+
+## (1) Prepare data
+
+<br>
+
+Load the following `R` packages. 
+
+```{r packages, message=FALSE, warning=FALSE}
+# Load packages
+library("dplyr")
+library("Totem")
+library("scater")
+library("ggplot2")
+library("zellkonverter")
+library("SingleCellExperiment")
+```
+
+<br>
+
+<details><summary><i>What does every package?</i></summary><p> 
+
+   + `dplyr` v.`r packageVersion("dplyr")` [@dplyr]: data wrangling, e.g., _piping_ data with `%>%`
+   
+   + `ggplot2` v.`r packageVersion("ggplot2")` [@ggplot2]: data visualization 
+   
+   + `Totem` v.`r packageVersion("Totem")` [@smolander2022totem]: trajectory inference
+   
+   + `scater` v.`r packageVersion("scater")` [@scater]: `Bioconductor` scRNA toolkit - used for low-dimensional visualization
+   
+   + `zellkonverter` v.`r packageVersion("zellkonverter")` [@zellkonverter]: `Bioconductor` toolbox to convert between scRNA-seq objects - used to import `Anndata` objects into `R` as `SingleCellExperiment` object 
+   
+   + `SingleCellExperiment` v.`r packageVersion("SingleCellExperiment")` [@singlecellexperiment]: `Bioconductor` single-cell data object - `R` class object used to interact with `Totem`    
+
+</p></details>
+
+<br>
+
+Set seed to keep the reproducibility of the analyses generated. 
+
+```{r seed}
+# Set seed
+set.seed(1204)
+```
+   
+<br> 
+
+Download and import the data as `SingleCellExperiment` class object with the function `readH5AD` (from the `zellkonverter` package). 
+
+`Totem` conveniently uses the `SingleCellExperiment` (`SCE` for short) `R` package and class to store all the information that generates in its workflow. This can be accessed through: `metadata(sce)$Totem` (which returns a list of objects generated in the `Totem` workflow). 
+
+A `SCE` object can store several gene expression assays (raw, log counts, etc), metadata (cell/gene) and dimensional reduction data. Please have a look into the [Chapter 4 The SingleCellExperiment class](https://bioconductor.org/books/3.17/OSCA.intro/the-singlecellexperiment-class.html) of the [OSCA](https://bioconductor.org/books/3.17/OSCA.intro/) book to learn more about the `SingleCellExperiment` class and functionality.  
+
+```{r download & import datasets, message=FALSE, warning=FALSE}
+## Download the anndata object 'human_cd34_bm_rep1.h5ad' from HCA Portal: 
+# https://data.humancellatlas.org/explore/projects/091cf39b-01bc-42e5-9437-f419a66c8a45
+data.dir <- "../data/quickstart" # create folder to save the data 
+dir.create(path = data.dir, recursive = TRUE)
+file2down <- file.path(data.dir, "human_cd34_bm_rep1.h5ad") # path to save the file
+
+# Check if the data exists locally before attempting to download it
+if (!file.exists(file2down)) { # the link to download expires, thus it needs to be updated
+  url2down <- "https://storage.googleapis.com/datarepo-4ef3f5a3-bucket/0e5e329e-2709-4ceb-bfe3-97d23a652ac0/3428f967-3376-4051-b6f7-8dd84580ca5b/human_cd34_bm_rep1.h5ad?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=datarepo-jade-api%40terra-datarepo-production.iam.gserviceaccount.com%2F20230302%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20230302T141550Z&X-Goog-Expires=900&X-Goog-SignedHeaders=host&requestedBy=azul-ucsc-0-public-prod%40platform-hca-prod.iam.gserviceaccount.com&userProject=datarepo-1dbff5cd&X-Goog-Signature=2c5c19abfe88e1d2d2fd7e50c3135e878f757183ddf383fa43e12285338998f1419dfb73dd4185a89ea9135a696feb65042fee38c4d833f7cf255af4b2e4be53a6c0ff8ab2f653c7ca1843fd31e850ad7d8532d598ca44b074c47d1dc80eb508a4ae8f843f8ba12869cc88f51037c50cd802c02061f9bd8ff1de3bd082b61135f635468c643bdf73d04b8f2ede122d5871848b519b10cc6d56bb3b03cdcd7bfc8996e23f4fe3b8685b51f5770d5c62466388cd1f77eaf2b29242faae3612f21e949600fc03cce94b1c97c050f9fc53aedd500966de0221a429a4541c62b3a81f8024182dfe177d78d1ea008757ca839a726dda6f975c5d34c0ac9ff3034d9b18"
+  download.file(url = url2down, destfile = file2down)
+}
+
+## Import the anndata '.h5ad' object as SCE object
+sce <- readH5AD(file = file2down, X_name = "scaled", raw = TRUE)
+```
+
+<br>
+
+`Totem` requires only log normalized data as input which can be obtained by using common single-cell processing software tools such as `Seurat` [@hao2021integrated], `scanpy`  [@wolf2018scanpy] or directly calculated in `R` or `python`. 
+
+<details><summary><i>How do I get log normalized data from counts?</i></summary><p> 
+
+Assuming you have counts from single-cell gene expression data, you have at least the following three alternatives to perform log normalization: 
+
+   1. R without external tools: applying basic R functions
+   
+      + `apply()` R function can be used to apply the formula `log1p(x/sum(x)*10000)` (natural log, with 1 pseudocount, of the relative gene expression scaled by 1e4) to every column, i.e., cell, in the `counts` matrix
+      
+```{r log-norm, eval=FALSE, include=TRUE}
+## Log normalization
+counts <- assay(altExp(sce, "raw"), "X")
+log.counts <- apply(counts, 2, function(x) log1p(x/sum(x)*10000)) # log1p normalization w/ 10K scaling factor
+```
+   
+   2. `Seurat`: a R package available from [https://satijalab.org/seurat/](https://satijalab.org/seurat/)
+   
+      + use the `Seurat` function `NormalizeData(..., normalization.method="LogNormalize", scale.factor = 10000)` (see [docs](https://satijalab.org/seurat/reference/normalizedata))
+   
+   3. `scanpy`: a python package available from [https://scanpy.readthedocs.io/en/stable/](https://scanpy.readthedocs.io/en/stable/)
+   
+      + use the `scanpy` function `scanpy.pp.normalize_total(..., target_sum=10000)` (see [docs](https://scanpy.readthedocs.io/en/stable/generated/scanpy.pp.normalize_total.html#scanpy.pp.normalize_total))
+
+</p></details>
+
+<br>
+
+The tSNE provided in the object that was imported is saved into the variable `dim_red` and all the dimensional reductions from the `sce` object removed. In addition, it is determined the `logcounts` from the `raw` counts (available at `assay(altExp(sce, "raw"), "X")`) applying the formula: `log1p(x/sum(x)*10000)` (running `log.counts <- apply(counts, 2, function(x) log1p(x/sum(x)*10000))`). 
+
+```{r tsne & rm dimreds & logcounts, echo=TRUE, message=FALSE, warning=FALSE}
+## Save tSNE
+tsne.dim_red <- reducedDim(sce, "tsne")
+
+## Remove unnecessary reductions
+reducedDims(sce) <- NULL
+
+## logcounts
+stopifnot(all(colnames(altExp(sce, "raw"))==colnames(sce)))
+stopifnot(all(row.names(altExp(sce, "raw"))==row.names(sce)))
+counts <- assay(altExp(sce, "raw"), "X")
+log.counts <- apply(counts, 2, function(x) log1p(x/sum(x)*10000)) # log1p normalization w/ 10K scaling factor
+assay(sce, "logcounts") <- as(log.counts, "sparseMatrix")
+rm(list = c("counts", "log.counts")) # remove unnecessary objects
+```
+
+<br>
+
+Next the cell cluster annotations are added and the cluster color names fixed. 
+
+```{r cell cluster annot}
+## Cell cluster annotations
+# Format names of the cluster colors of original clusters
+names(metadata(sce)$cluster_colors) <- levels(sce$clusters) 
+
+# Add cell annotations based on github issue: 
+# https://github.com/dpeerlab/Palantir/issues/40
+cluster2annot.long <- c("0" = "Hematopoietic stem cells", "1" = "Hematopoietic multipotent progenitors", 
+                        "2" = "Erythroid progenitors", "3" = "Monocyte progenitors", 
+                        "4" = "Myeloid progenitors", "5" = "Common lymphoid progenitors", 
+                        "6" = "Monocyte progenitors", "7" = "Dendritic cell progenitors", 
+                        "8" = "Erythroid progenitors", "9" = "Megakaryocyte progenitors")
+cluster2annot.short <- c("0" = "HSC", "1" = "HMP", "2" = "EP", "3" = "MoP", 
+                         "4" = "MyP", "5" = "CLP", "6" = "MP", "7" = "DCP", 
+                         "8" = "EP", "9" = "MKP")
+colData(sce)$cell_types_long <- colData(sce)$clusters
+levels(colData(sce)$cell_types_long) <- cluster2annot.long
+colData(sce)$cell_types_short <- colData(sce)$clusters
+levels(colData(sce)$cell_types_short) <- cluster2annot.short
+```
+
+Before starting the workflow, we exclude any potential non expressed gene from our SCE object. 
+
+```{r prepare data}
+## Prepare data for Totem: remove non-expressed genes
+sce <- PrepareTotem(object = sce)
+```
+
+The `sce` object contains the assays `r paste(assayNames(sce), collapse=", ")`, the cell metadata `r paste(colnames(colData(sce)), collapse=", ")` with `r nrow(sce)` genes and `r ncol(sce)` cells. 
+
+<br>
+
+<br>
+
+---
+
+<br>
+
+<br>
+
+## (2) Feature selection
+
+<br>
+
+The next step consists in feature selection. This is not mandatory but highly recommended due to the following reasons: 
+
+   1. the differential expression of some genes may reflect technical or bias effects rather than biological signal which might be masked upon selection of top _n_ highly variable genes
+   
+   2. removes uninformative genes such as lowly abundant or showing an invariant gene expression across different cells
+   
+   3. increases the computational speed of downstream steps due to the reduced dimensionality
+   
+This step can be performed with any software tool of your choice, such as `Seurat` or `scanpy`. The only required information is a list of highly variable genes (HVG) that needs to be provided to `Totem`. Below we provide a solution for the selection of 2K HVG using the software R package `scran`.  
+
+```{r hvg}
+## Selection of HVG w/ scran R package
+var.genes <- scran::modelGeneVar(sce)
+hvg <- scran::getTopHVGs(var.genes, n = 2000)
+```
+
+<br>
+
+The object `hvg` is a character vector with the names of top 2K HVG (`r paste(head(hvg), collapse=", ")`, ...).
+
+<br>
+
+<br>
+
+---
+
+<br>
+
+<br>
+
+## (3) Dimensionality reduction
+
+<br>
+
+The next step in the workflow consists in dimensionality reduction for clustering purposes downstream of this stage. 
+
+The user can use any low-dimensional representation method of its choice that represents the data, such as PCA (Principal Component Analysis), UMAP (Uniform Manifold Approximation and Projection for Dimension Reduction), _t_-SNE ( _t_-distributed Stochastic Neighbourhood Embedding) or LMDS (landmark Multi-Dimensional Scaling). 
+
+Next We will use PCA, but the `Totem` vignette provides some tips if you want to use other method (see [vignette](https://htmlpreview.github.io/?https://github.com/elolab/Totem-benchmarking/blob/main/Totem.html#tips)).
+
+You can skip this step if you have your own low-dimensional representation already (see the next paragraph). In this step, We perform PCA for the HVG determined in the previous step (by giving `dim.red.features = hvg`). In case you do not want to use HVG, just change `dim.red.features = hvg` to `dim.red.features = NULL`.
+
+```{r dimred}
+## Dimensionality reduction
+sce <- RunDimRed(object = sce,
+                 dim.red.method = "pca",
+                 dim.red.features = hvg,
+                 dim.reduction.par.list = list(ndim=50))
+```
+
+<br>
+
+In case you have already your own low-dimensional representation, just add it to the SCE object
+
+```{r add dimred, eval=FALSE, include=TRUE}
+## Add low-dimensional representation to SCE object
+own_dim_red <- reducedDim(sce) # substitute this line by importing your own dimensional result (define class as matrix (rows x cols: cells x latent dimensions))
+reducedDim(sce, type = "pca") <- own_dim_red # type can be 'pca', 'umap' whatever you want - this is the name given to the dimensional result
+```
+
+<br>
+
+The PCA can be visualized together with the elbow plot highlighting the standard deviation of every component to help us to decide the numbers of components that should be selected for clustering and UMAP projection (which can rely on the PCA). 
+
+The code below calculates the standard deviation for each principal component (PC) and, then, it uses the dplyr and ggplot2 functions to plot the results. In addition is also plotted the top 20 PCs with the cells highlighted by cell type. 
+
+```{r pca var, fig.width=16, fig.height=9}
+## Inspect PCA variance
+
+# Elbow plot
+elbow.plt <- reducedDim(sce, "pca") %>% 
+  apply(X = ., MARGIN = 2, FUN = function(x) sd(x)) %>%
+  as.data.frame(.) %>% 
+  `colnames<-`("Standard Deviation") %>% 
+  mutate("PCs" = factor(1:nrow(.), levels = 1:nrow(.))) %>% 
+  ggplot(data = ., mapping = aes(x = PCs, y = `Standard Deviation`)) + 
+  geom_point() + 
+  theme_bw()
+
+# PCA plot
+pca.plt <- reducedDim(sce, "pca") %>% 
+  as.data.frame(.) %>%
+  mutate("Cell_ID" = row.names(.)) %>% 
+  cbind(., colData(sce)) %>% 
+  ggplot(data = ., mapping = aes(x=comp_1, y=comp_2, color=cell_types_short)) + 
+  geom_point() + 
+  labs(x = "PC1", y = "PC2") + 
+  scale_color_manual(values=as.character(unlist(metadata(sce)$cluster_colors)[!duplicated(cluster2annot.short)])) + 
+  theme_bw()
+
+# Box plot: top 20 PCs w/ cell types highlight by PC
+pca.scores.plt <- reducedDim(sce, "pca") %>% 
+  as.data.frame(.) %>% 
+  mutate("Cell_ID"=row.names(.)) %>% 
+  cbind(., colData(sce)) %>% 
+  tidyr::pivot_longer(., cols=comp_1:comp_20, names_to="PCs", values_to ="Scores") %>% 
+  mutate("PCs" = factor(PCs, levels = paste0("comp_", 1:20))) %>% 
+  ggplot(data= ., aes(x=PCs, y=Scores)) + 
+  geom_boxplot(outlier.shape = NA) + 
+  geom_jitter(aes(color=cell_types_short), size=0.25) + 
+  scale_color_manual(values=as.character(unlist(metadata(sce)$cluster_colors)[!duplicated(cluster2annot.short)])) + 
+  theme_bw() + 
+  theme(axis.text.x = element_text(angle = 35, hjust = 1, vjust = 1))
+
+# Plot altogether 
+cowplot::plot_grid(cowplot::plot_grid(elbow.plt, pca.plt, ncol=2), pca.scores.plt, ncol=1)
+```
+
+<br>
+
+Let's select the first 6 PCs which seem to hold most of the biological variation present in this data set.
+
+```{r pick pcs}
+## Pick PCs
+pick.pcs <- 1:6
+reducedDim(sce, "pca") <- reducedDim(sce, "pca")[, pick.pcs ] 
+```
+
+<br>
+
+We need a 2-dimensional representation rather than PCA for visualization purposes. Adequate methods are UMAP, `t`-SNE or MDS. Any of these can be directly provided by the user in case they generated previously any or generated _de novo_ as follows with the `Totem`'s function `RunDimRed()`. Here it is computed the popular UMAP (`dim.red.method = "umap"`) using the 2K HVG (`dim.red.features = hvg`) as it was done for the PCA. In addition, it was provided a list of parameters for the `dyndimred` package: `ndim=2` (compute only two UMAP dimensions) and `pca_components = 6` (use only the first 6 PCs to compute the UMAP). The function returns the UMAP dimensional reduction to the `sce` object at `reducedDim(sce, "umap")`. 
+
+```{r umap viz}
+## UMAP dimensional reduction for visualization
+set.seed(123)
+sce <- RunDimRed(object = sce, 
+                 dim.red.method = "umap", 
+                 dim.red.features = hvg, 
+                 dim.reduction.par.list = list(ndim=2, pca_components = 6))
+dim_red <- reducedDim(sce, "umap")
+```
+
+<br>
+
+The result can be visualized below with the `scran` function `plotReducedDim()`.
+
+```{r viz umap}
+## Visualize 'Group' in UMAP projection
+plotReducedDim(object = sce, dimred = "umap", colour_by = "cell_types_short", point_size=0.5) + 
+  scale_color_manual(name= "Cell Types", 
+                     values=as.character(unlist(metadata(sce)$cluster_colors)[!duplicated(cluster2annot.short)])) + 
+  theme_void()
+reducedDim(sce, "uma") <- NULL # remove UMAP from 'sce' object
+```
+
+<br>
+
+<br>
+
+---
+
+<br>
+
+<br>
+
+## (4) Clustering (& MST)
+
+<br>
+
+Clustering is one of the main steps in the `Totem` workflow and the one that takes more time and computational resources. `Totem` is use the 6-dimensional latent representations of PCA are used to cluster the data set with the k-medoids (CLARA) algorithm using an expected number of clusters varying between 3-20 (`k.range = 3:20`), removing clusters with <5 cells (`min.cluster.size = 5`) and running the clustering algorithm 10K times (`N.clusterings = 10000`). These are the default parameters. After filtering out clustering results due to `min.cluster.size`, the total number of clustering results will be lower than `N.clusterings`. At this stage, it is also estimated a MST (Minimum Spanning Tree) for each clustering result. 
+
+```{r cluster}
+## Clustering scRNA-seq data w/ CLARA (k-medoids)
+set.seed(123)
+sce <- RunClustering(object = sce, k.range = 3:20,
+                     min.cluster.size = 5, N.clusterings = 10000)
+```
+
+<br>
+
+<br>
+
+---
+
+<br>
+
+<br>
+
+## (5) Cell connectivity
+
+<br>
+
+**Cell connectivity** is a novel concept introduced in `Totem`. For a given clustering result and the respective MST (Minimum Spanning Trees) , the connectivity of a cell cluster consists in the ratio of its connections to other clusters by the total number of clusters. The cell connectivity is scaled by the maximum value and averaged across a set of clustering and MST results (by default 10K). Higher the value farther the distance for the leafs/ending points of the trajectory and, thus, more likely to represent, e.g., branching points (see Fig.4 [@smolander2022totem]).
+
+The **cell connectivity** unit can be used for two purposes: 
+
+   (1) support the user decision about the most likely trajectory
+   
+   (2) **selecting clustering** results method (see next section)
+
+```{r cell connect viz}
+## Visualization of cell connectivity
+VizCellConnectivity(object = sce, viz.dim.red = dim_red)
+```
+
+<br>
+
+According to the expected low values of cell connectivity corresponds to terminally differentiated cell states, i.e., CLP, EP, MoP, DCP, and high values to HSC, HMP or MyP, imature cell populations that are branching into other populations.    
+
+<br>
+
+<br>
+
+---
+
+<br>
+
+<br>
+
+## (6) Select clusterings
+
+<br>
+
+The clustering can be selected based on 5 methods described in detail in the `Totem` vignette (see [vignette](https://htmlpreview.github.io/?https://github.com/elolab/Totem-benchmarking/blob/main/Totem.html#clustering-selection)). You can also see the function documentation by typing the following in the R console: `?SelectClusterings`.
+
+Here, We selected the top 6 models with the method 3 which was demonstrated to perform well compared with other methods [@smolander2022totem]. Method 3 relies on the average of two metrics to select the top 5, i.e., `selection.N.models=5`, best clusterings, i.e., the clustering results that are more congruent and agree better with the tree structure:
+
+   1. VRC (Variance Ratio Criterion) or _Calinski-Harabasz score_: it measures the within- and between-cluster dispersion
+   
+   2. cell connectivity: _see above_
+
+```{r select clusters}
+## Select best clusters for MST calculation
+sce <- SelectClusterings(sce, selection.method = 3,
+                         selection.N.models = 6,
+                         selection.stratified = FALSE,
+                         prior.clustering = NULL)
+```
+
+<br>
+
+Below it appears highlighted the 6 selected clusterings and their respective MSTs. 
+
+```{r viz selected clusters, fig.width=12, fig.height=12}
+## Visualize selected clusters
+select.clusters <- ReturnTrajNames(sce)
+VizMST(object = sce, clustering.names = select.clusters, viz.dim.red = dim_red)
+```
+
+<br>
+
+<br>
+
+---
+
+<br>
+
+<br>
+
+## (7) Smoothing MSTs
+
+<br>
+
+Smoothing MSTs using the principle curves `slingshot` algorithm [@street2018slingshot] resulting in directory trajectories randomly rooted and discrete pseudotime along the lineage. The user can provide in the next step the root.  
+
+```{r smooth msts}
+## Smoothing MSTs selected w/ Slingshot
+sce <- RunSmoothing(sce)
+```
+
+<br>
+
+Visualize smoothed MSTs below.
+
+```{r viz smoothed msts, fig.width=12, fig.height=12}
+## Visualize smoothed MSTs
+smooth.msts.names <- ReturnTrajNames(sce)
+VizSmoothedTraj(object = sce,
+                traj.names = smooth.msts.names,
+                viz.dim.red = dim_red,plot.pseudotime = FALSE)
+```
+
+<br>
+
+From the top 6 smoothed MST trajectories presented, the only difference relies on the MoP and DCP lineages and the branching from these lineages to the CLP. 
+
+The CLP needs to diverge before the MyP and MoP and DCP should diverge from MyP. Thus the clustering/MST result `8.135` seems to meet these expectations. I will be selected below as the elected trajectory.  
+
+<br>
+
+<br>
+
+---
+
+<br>
+
+<br>
+
+## (8) Define a root 
+
+<br>
+
+At this stage the root can be defined be giving the cluster number. Let's define cluster 2 as root. 
+
+```{r root}
+## Define the root of the cell trajectory
+select.traj <- "8.135"
+root.cluster <- 2
+sce <- ChangeTrajRoot(object = sce, traj.name = select.traj, root.cluster = root.cluster)
+```
+
+<br>
+
+<br>
+
+---
+
+<br>
+
+<br>
+
+## (9) Pseudotime
+
+<br>
+
+Pseudotime can be highlighted in the low dimensional projection below.
+
+```{r viz pseudotime}
+cowplot::plot_grid(
+  VizSmoothedTraj(object = sce,
+                  traj.names = select.traj,
+                  viz.dim.red = dim_red, plot.pseudotime = FALSE),
+  VizSmoothedTraj(object = sce,
+                  traj.names = select.traj,
+                  viz.dim.red = dim_red, plot.pseudotime = TRUE), 
+  ncol=2
+)
+```
+
+<br>
+
+<br>
+
+---
+
+<br>
+
+<br>
+
+### Pseudotime comparison
+
+<br>
+
+`Totem`'s pseudotime (on the left side) can be compared with `Palantir`'s pseudotime (on the right side). The _Pearson_'s correlation between pseudotimes was `r round(cor(sce$palantir_pseudotime, dynwrap::calculate_pseudotime(metadata(sce)$totem$dynwrap_trajectory[[select.traj]])), 2)`. 
+
+```{r compare pseudotime, fig.width=12}
+## Compare Totem pseudotime against ground-truth
+reducedDim(sce, "umap") <- dim_red
+cowplot::plot_grid(
+  (VizSmoothedTraj(object = sce,
+                traj.names = select.traj,
+                viz.dim.red = dim_red, plot.pseudotime = TRUE) + 
+     ggtitle("Totem")),
+  (plotReducedDim(sce, dimred = "umap", colour_by = "palantir_pseudotime") + 
+      ggtitle("Palantir's pseudotime")) + 
+    theme_void() + 
+    theme(legend.position = "bottom"), 
+   ncol=2
+   ) 
+```
+
+<br>
+
+The pseudotime and trajectory obtained with `Totem` agrees well with `Palantir`. Contrary to the inferred trajectory with the tSNE projection in quick start guide, by using a more adequate dimensional reduction projection such as PCA, `Totem` was able to predict correctly the trajectory related with the CLP. 
+
+<br>
+
+<br>
+
+---
+
+<br>
+
+<br>
+
+#### R packages used and respective versions
+
+<br>
+
+```{r versions, message=FALSE, warning=FALSE, paged.print=FALSE}
+## R packages and versions used in these analyses
+sessionInfo()
+```
+
+<br>
+
+<br>
+
+---
+
+<br>
+
+<br>
+
+## References
