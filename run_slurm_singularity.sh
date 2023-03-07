@@ -1,13 +1,14 @@
 #!/bin/bash
 #SBATCH --partition=normal
-#SBATCH --time=12:00:00
-#SBATCH --cpus-per-task=8
-#SBATCH --mem=32g
+#SBATCH --time=3:00:00
+#SBATCH --cpus-per-task=4
+#SBATCH --mem=8g
 #SBATCH --output=rsessions/rstudio-server.job.%j
 
 # COMMENT: this script is based on rocker project: 
 # https://rocker-project.org/use/singularity
 
+# Working directory 
 WORKDIR=${PWD}
 echo -e "Creating working directory for R session at: ${WORKDIR}\n"
 mkdir -p -m 700 ${WORKDIR}/rsessions/run ${WORKDIR}/rsessions/tmp ${WORKDIR}/rsessions/var/lib/rstudio-server
@@ -49,8 +50,7 @@ fi
 export SINGULARITY_CACHEDIR=~/.singularity/cache
 # get unused socket per https://unix.stackexchange.com/a/132524
 # tiny race condition between the python & singularity commands
-#readonly PORT=$(python -c 'import socket; s=socket.socket(); s.bind(("", 0)); print(s.getsockname()[1]); s.close()')
-export PORT=8787
+readonly PORT=$(python -c 'import socket; s=socket.socket(); s.bind(("", 0)); print(s.getsockname()[1]); s.close()')
 cat 1>&2 <<END
 1. SSH tunnel from your workstation using the following command:
 
@@ -71,11 +71,7 @@ When done using RStudio Server, terminate the job by:
       scancel -f ${SLURM_JOB_ID}
 END
 
-## Pulling rstudio image if not present
-#The following image was built with the def file under the directory: 'cluster_slurm_nb/imgs/single-cell.def' 
-#ROCKER=/wrk/local2/B21027_scRNAseq_signatures/261121_tcell_ref/b21027_t_cell_ref/test/cluster_slurm_nb/imgs/single-cell-v1.sif       
-ROCKER=imgs/scrna-cell-ti.sif       
-
+ROCKER=imgs/repro-totem-ti.sif       
 echo -e "\nLaunching RStudio...\n"
 singularity exec --cleanenv ${ROCKER} \
     /usr/lib/rstudio-server/bin/rserver --server-user ${USER} \
