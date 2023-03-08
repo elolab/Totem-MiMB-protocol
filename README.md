@@ -25,18 +25,27 @@ Archived date:
 
 <br>
 
-   + data: data sets used in the analysis protocol
+   + scripts: `download_h5ad_to_SCE_rds_script.R` R script used to obtain `human_cd34_bm_rep1.rds` object and 'QuickStart_Totem.R' and 'GuidedStart_Totem.R' R analysis scripts
 
-   + scripts: code used in the analysis protocol
-
-   + notebooks: Rmd notebooks used in the analysis protocol
-
-   + results: results generated during analyses
+   + notebooks: 'QuickStart_Totem.Rmd' and 'GuidedStart_Totem.Rmd' R markdown notebooks used in the analyses
 
    + `run_docker.sh`: bash script to launch `repro-totem-ti` docker image  
 
    + `run_slurm_singularity.sh`: bash script to submit a job to Slurm workload manager and launch the `repro-totem-ti` singularity image 
+
    + `rmd_to_rscript.R`: bash script to convert Rmd notebooks into R scripts
+
+<br>
+
+---
+
+<br>
+
+### Data 
+
+<br>
+
+The data set `human_cd34_bm_rep1.rds` was generated with the R script `download_h5ad_to_SCE_rds_script.R`. It is a parsed `SingleCellExperiment` `RDS` object corresponding to the anndata h5ad `human_cd34_bm_rep1.h5ad` available on [HCA Portal]() and published by [Setty et al., 2019](https://www.nature.com/articles/s41587-019-0068-4).
 
 <br>
 

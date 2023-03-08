@@ -32,7 +32,7 @@ text-align: justify}
 
 This tutorial is a detailed starting guide with `Totem`, a user-friendly tree-shaped single-cell trajectory inference (TI) method [@smolander2022totem]. In the quick start guide it is shown the application of `Totem`'s TI method under a scenario where one is interested in inferring cell trajectory after running an integration and/or clustering analysis and the data has already been projected onto the low-dimensional space, such as PCA and UMAP. In this detailed starting guide, the aim is to start from the count matrix to trajectory inference providing along the way a better description and exploration of the intermediate results generated.   
 
-To this end, `Totem`'s TI was applied to the same data set analyzed in the quick start guide, a **CD34+ bone marrow cells** (replicate 1) data set that was used as an example in the `Palantir`'s TI publication [@palantir] and publicly available at Human Cell Atlas Portal (link: [https://data.humancellatlas.org/explore/projects/091cf39b-01bc-42e5-9437-f419a66c8a45](https://data.humancellatlas.org/explore/projects/091cf39b-01bc-42e5-9437-f419a66c8a45)). The data provided comprises tSNE projection, cluster identities,`palantir` pseudotime, transformed log-normalized and raw data (the `anndata` object can be found at [human_cd34_bm_rep1.h5ad](https://data.humancellatlas.org/explore/projects/091cf39b-01bc-42e5-9437-f419a66c8a45/project-matrices)). 
+To this end, `Totem`'s TI was applied to the same data set analyzed in the quick start guide, a **CD34+ bone marrow cells** (replicate 1) data set that was used as an example in the `Palantir`'s TI publication [@palantir] and publicly available at Human Cell Atlas Portal (link: [https://data.humancellatlas.org/explore/projects/091cf39b-01bc-42e5-9437-f419a66c8a45](https://data.humancellatlas.org/explore/projects/091cf39b-01bc-42e5-9437-f419a66c8a45)). The data provided comprises tSNE projection, cluster identities,`palantir` pseudotime, transformed log-normalized and raw data (the `anndata` object can be found at [human_cd34_bm_rep1.h5ad](https://data.humancellatlas.org/explore/projects/091cf39b-01bc-42e5-9437-f419a66c8a45/project-matrices)). The `human_cd34_bm_rep1.h5ad` `anndata` `h5ad` object was downloaded, parsed and distributed as a RDS `SingleCellExperiment` class object at `data/human_cd34_bm_rep1.rds`. The R script used for this object is provided at `scripts/download_h5ad_to_SCE_rds_script.R`.
 
 The content of this tutorial is enumerated and described below. 
 
@@ -82,7 +82,6 @@ library("dplyr")
 library("Totem")
 library("scater")
 library("ggplot2")
-library("zellkonverter")
 library("SingleCellExperiment")
 ```
 
@@ -97,8 +96,6 @@ library("SingleCellExperiment")
    + `Totem` v.`r packageVersion("Totem")` [@smolander2022totem]: trajectory inference
    
    + `scater` v.`r packageVersion("scater")` [@scater]: `Bioconductor` scRNA toolkit - used for low-dimensional visualization
-   
-   + `zellkonverter` v.`r packageVersion("zellkonverter")` [@zellkonverter]: `Bioconductor` toolbox to convert between scRNA-seq objects - used to import `Anndata` objects into `R` as `SingleCellExperiment` object 
    
    + `SingleCellExperiment` v.`r packageVersion("SingleCellExperiment")` [@singlecellexperiment]: `Bioconductor` single-cell data object - `R` class object used to interact with `Totem`    
 
@@ -115,27 +112,15 @@ set.seed(1204)
    
 <br> 
 
-Download and import the data as `SingleCellExperiment` class object with the function `readH5AD` (from the `zellkonverter` package). 
+Import the `RDS` `SingleCellExperiment` class object storing the scRNA-seq data set with the function `readRDS` (file available at: `data/human_cd34_bm_rep1.rds`). 
 
 `Totem` conveniently uses the `SingleCellExperiment` (`SCE` for short) `R` package and class to store all the information that generates in its workflow. This can be accessed through: `metadata(sce)$Totem` (which returns a list of objects generated in the `Totem` workflow). 
 
 A `SCE` object can store several gene expression assays (raw, log counts, etc), metadata (cell/gene) and dimensional reduction data. Please have a look into the [Chapter 4 The SingleCellExperiment class](https://bioconductor.org/books/3.17/OSCA.intro/the-singlecellexperiment-class.html) of the [OSCA](https://bioconductor.org/books/3.17/OSCA.intro/) book to learn more about the `SingleCellExperiment` class and functionality.  
 
-```{r download & import datasets, message=FALSE, warning=FALSE}
-## Download the anndata object 'human_cd34_bm_rep1.h5ad' from HCA Portal: 
-# https://data.humancellatlas.org/explore/projects/091cf39b-01bc-42e5-9437-f419a66c8a45
-data.dir <- "../data/quickstart" # create folder to save the data 
-dir.create(path = data.dir, recursive = TRUE)
-file2down <- file.path(data.dir, "human_cd34_bm_rep1.h5ad") # path to save the file
-
-# Check if the data exists locally before attempting to download it
-if (!file.exists(file2down)) { # the link to download expires, thus it needs to be updated
-  url2down <- "https://storage.googleapis.com/datarepo-4ef3f5a3-bucket/0e5e329e-2709-4ceb-bfe3-97d23a652ac0/3428f967-3376-4051-b6f7-8dd84580ca5b/human_cd34_bm_rep1.h5ad?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=datarepo-jade-api%40terra-datarepo-production.iam.gserviceaccount.com%2F20230302%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20230302T141550Z&X-Goog-Expires=900&X-Goog-SignedHeaders=host&requestedBy=azul-ucsc-0-public-prod%40platform-hca-prod.iam.gserviceaccount.com&userProject=datarepo-1dbff5cd&X-Goog-Signature=2c5c19abfe88e1d2d2fd7e50c3135e878f757183ddf383fa43e12285338998f1419dfb73dd4185a89ea9135a696feb65042fee38c4d833f7cf255af4b2e4be53a6c0ff8ab2f653c7ca1843fd31e850ad7d8532d598ca44b074c47d1dc80eb508a4ae8f843f8ba12869cc88f51037c50cd802c02061f9bd8ff1de3bd082b61135f635468c643bdf73d04b8f2ede122d5871848b519b10cc6d56bb3b03cdcd7bfc8996e23f4fe3b8685b51f5770d5c62466388cd1f77eaf2b29242faae3612f21e949600fc03cce94b1c97c050f9fc53aedd500966de0221a429a4541c62b3a81f8024182dfe177d78d1ea008757ca839a726dda6f975c5d34c0ac9ff3034d9b18"
-  download.file(url = url2down, destfile = file2down)
-}
-
-## Import the anndata '.h5ad' object as SCE object
-sce <- readH5AD(file = file2down, X_name = "scaled", raw = TRUE)
+```{r import dataset, message=FALSE, warning=FALSE}
+## Import the scRNA-seq SCE object
+sce <- readRDS(file = "../data/human_cd34_bm_rep1.rds")
 ```
 
 <br>
@@ -168,55 +153,17 @@ log.counts <- apply(counts, 2, function(x) log1p(x/sum(x)*10000)) # log1p normal
 
 <br>
 
-The tSNE provided in the object that was imported is saved into the variable `dim_red` and all the dimensional reductions from the `sce` object removed. In addition, it is determined the `logcounts` from the `raw` counts (available at `assay(altExp(sce, "raw"), "X")`) applying the formula: `log1p(x/sum(x)*10000)` (running `log.counts <- apply(counts, 2, function(x) log1p(x/sum(x)*10000))`). 
-
-```{r tsne & rm dimreds & logcounts, echo=TRUE, message=FALSE, warning=FALSE}
-## Save tSNE
-tsne.dim_red <- reducedDim(sce, "tsne")
-
-## Remove unnecessary reductions
-reducedDims(sce) <- NULL
-
-## logcounts
-stopifnot(all(colnames(altExp(sce, "raw"))==colnames(sce)))
-stopifnot(all(row.names(altExp(sce, "raw"))==row.names(sce)))
-counts <- assay(altExp(sce, "raw"), "X")
-log.counts <- apply(counts, 2, function(x) log1p(x/sum(x)*10000)) # log1p normalization w/ 10K scaling factor
-assay(sce, "logcounts") <- as(log.counts, "sparseMatrix")
-rm(list = c("counts", "log.counts")) # remove unnecessary objects
-```
-
-<br>
-
-Next the cell cluster annotations are added and the cluster color names fixed. 
-
-```{r cell cluster annot}
-## Cell cluster annotations
-# Format names of the cluster colors of original clusters
-names(metadata(sce)$cluster_colors) <- levels(sce$clusters) 
-
-# Add cell annotations based on github issue: 
-# https://github.com/dpeerlab/Palantir/issues/40
-cluster2annot.long <- c("0" = "Hematopoietic stem cells", "1" = "Hematopoietic multipotent progenitors", 
-                        "2" = "Erythroid progenitors", "3" = "Monocyte progenitors", 
-                        "4" = "Myeloid progenitors", "5" = "Common lymphoid progenitors", 
-                        "6" = "Monocyte progenitors", "7" = "Dendritic cell progenitors", 
-                        "8" = "Erythroid progenitors", "9" = "Megakaryocyte progenitors")
-cluster2annot.short <- c("0" = "HSC", "1" = "HMP", "2" = "EP", "3" = "MoP", 
-                         "4" = "MyP", "5" = "CLP", "6" = "MP", "7" = "DCP", 
-                         "8" = "EP", "9" = "MKP")
-colData(sce)$cell_types_long <- colData(sce)$clusters
-levels(colData(sce)$cell_types_long) <- cluster2annot.long
-colData(sce)$cell_types_short <- colData(sce)$clusters
-levels(colData(sce)$cell_types_short) <- cluster2annot.short
-```
-
-Before starting the workflow, we exclude any potential non expressed gene from our SCE object. 
+Before starting the workflow, we remove the tSNE from the `SCE` object and we exclude any potential non expressed gene from our SCE object. 
 
 ```{r prepare data}
+## Remove tSNE from SCE object
+reducedDim(sce, "tsne") <- NULL
+
 ## Prepare data for Totem: remove non-expressed genes
 sce <- PrepareTotem(object = sce)
 ```
+
+<br>
 
 The `sce` object contains the assays `r paste(assayNames(sce), collapse=", ")`, the cell metadata `r paste(colnames(colData(sce)), collapse=", ")` with `r nrow(sce)` genes and `r ncol(sce)` cells. 
 
@@ -321,7 +268,7 @@ pca.plt <- reducedDim(sce, "pca") %>%
   ggplot(data = ., mapping = aes(x=comp_1, y=comp_2, color=cell_types_short)) + 
   geom_point() + 
   labs(x = "PC1", y = "PC2") + 
-  scale_color_manual(values=as.character(unlist(metadata(sce)$cluster_colors)[!duplicated(cluster2annot.short)])) + 
+  scale_color_manual(values=as.character(unlist(metadata(sce)$cluster_colors)[!duplicated(levels(sce$cell_types_short))])) + 
   theme_bw()
 
 # Box plot: top 20 PCs w/ cell types highlight by PC
@@ -334,7 +281,7 @@ pca.scores.plt <- reducedDim(sce, "pca") %>%
   ggplot(data= ., aes(x=PCs, y=Scores)) + 
   geom_boxplot(outlier.shape = NA) + 
   geom_jitter(aes(color=cell_types_short), size=0.25) + 
-  scale_color_manual(values=as.character(unlist(metadata(sce)$cluster_colors)[!duplicated(cluster2annot.short)])) + 
+  scale_color_manual(values=as.character(unlist(metadata(sce)$cluster_colors)[!duplicated(levels(sce$cell_types_short))])) + 
   theme_bw() + 
   theme(axis.text.x = element_text(angle = 35, hjust = 1, vjust = 1))
 
@@ -374,7 +321,7 @@ The result can be visualized below with the `scran` function `plotReducedDim()`.
 ## Visualize 'Group' in UMAP projection
 plotReducedDim(object = sce, dimred = "umap", colour_by = "cell_types_short", point_size=0.5) + 
   scale_color_manual(name= "Cell Types", 
-                     values=as.character(unlist(metadata(sce)$cluster_colors)[!duplicated(cluster2annot.short)])) + 
+                     values=as.character(unlist(metadata(sce)$cluster_colors)[!duplicated(levels(sce$cell_types_short))])) + 
   theme_void()
 reducedDim(sce, "uma") <- NULL # remove UMAP from 'sce' object
 ```

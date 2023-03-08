@@ -1,6 +1,8 @@
 data
 results
 notebooks/*.html
+!notebooks/QuickStart_Totem.html
+!notebooks/GuidedStart_Totem.html
 notebooks/Totem*
 imgs
 rsessions
