@@ -5,7 +5,8 @@ FROM rocker/tidyverse:4.2.1
 RUN mkdir -p /home/rstudio/results /home/rstudio/scripts \
 	/home/rstudio/notebooks /home/rstudio/data
 
-# Copy Rmd notebooks & scripts: 
+# Copy data, Rmd notebooks & scripts: 
+COPY data/human_cd34_bm_rep1.rds /home/rstudio/data
 COPY notebooks/QuickStart_Totem.Rmd notebooks/GuidedStart_Totem.Rmd \
 	notebooks/references.bib /home/rstudio/notebooks/
 COPY scripts/QuickStart_Totem.R scripts/GuidedStart_Totem.R \
