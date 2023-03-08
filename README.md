@@ -27,7 +27,7 @@ Archived date:
 
    + scripts: `download_h5ad_to_SCE_rds_script.R` R script used to obtain `human_cd34_bm_rep1.rds` object and `QuickStart_Totem.R` and `GuidedStart_Totem.R` R analysis scripts
 
-   + notebooks: `QuickStart_Totem.Rmd` and `GuidedStart_Totem.Rmd` R markdown notebooks used in the analyses
+   + notebooks: `QuickStart_Totem.Rmd` and `GuidedStart_Totem.Rmd` R markdown notebooks (and respective compliled `.html` files) used in the analyses
 
    + `run_docker.sh`: bash script to launch `repro-totem-ti` docker image  
 
