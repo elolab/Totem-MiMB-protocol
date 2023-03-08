@@ -1,10 +1,15 @@
+# Base image from Docker Hub:
 FROM rocker/tidyverse:4.2.1
 
 # Create directory structure:
-RUN mkdir -p /home/rstudio/results /home/rstudio/scripts /home/rstudio/notebooks /home/rstudio/data
+RUN mkdir -p /home/rstudio/results /home/rstudio/scripts \
+	/home/rstudio/notebooks /home/rstudio/data
 
-# Copy notebooks: 
-COPY notebooks/QuickStart_Totem.Rmd notebooks/GuidedStart_Totem.Rmd notebooks/references.bib /home/rstudio/notebooks/
+# Copy Rmd notebooks & scripts: 
+COPY notebooks/QuickStart_Totem.Rmd notebooks/GuidedStart_Totem.Rmd \
+	notebooks/references.bib /home/rstudio/notebooks/
+COPY scripts/QuickStart_Totem.R scripts/GuidedStart_Totem.R \
+	/home/rstudio/scripts/
 
 # Install software packages:
 RUN apt update && apt upgrade -y \
