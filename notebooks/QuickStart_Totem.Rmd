@@ -348,6 +348,13 @@ Despite the good correlation between pseudotime obtained between `Totem`'s and `
 One of the reasons that may explain this wrong prediction is how well the low-dimensional representation used for clustering fairly represents the relationship between cell types. The CLP population appears farther apart from the HSC than the cluster MyP (Myeloid Progenitor) in the two-dimensional tSNE projection making more likely to branch from the latter than the former.  
 
 In general, the user should be very critical about lineages towards cell populations/clusters that do not show a continuous development in the dimensional reduction projection used for clustering. 
+
+Finally, the `sce` object with all the results stored on it is exported. 
+ 
+```{r export sce obj}
+## Export sce object
+saveRDS(object = sce, file = "../results/sce_quickstart.rds")
+```
  
 <br>
 

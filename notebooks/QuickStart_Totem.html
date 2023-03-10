@@ -11,7 +11,7 @@
 
 <meta name="author" content="Elo lab - https://elolab.utu.fi" />
 
-<meta name="date" content="2023-08-03" />
+<meta name="date" content="2023-10-03" />
 
 <title>Quick start guide of single-cell TI with Totem</title>
 
@@ -1604,7 +1604,7 @@ border-radius: 0px;
 <h1 class="title toc-ignore">Quick start guide of single-cell TI with
 Totem</h1>
 <h4 class="author">Elo lab - <a href="https://elolab.utu.fi" class="uri">https://elolab.utu.fi</a></h4>
-<h4 class="date">08/03/2023</h4>
+<h4 class="date">10/03/2023</h4>
 
 </div>
 
@@ -2024,6 +2024,10 @@ latter than the former.</p>
 <p>In general, the user should be very critical about lineages towards
 cell populations/clusters that do not show a continuous development in
 the dimensional reduction projection used for clustering.</p>
+<p>Finally, the <code>sce</code> object with all the results stored on
+it is exported.</p>
+<pre class="r"><code>## Export sce object
+saveRDS(object = sce, file = &quot;../results/sce_quickstart.rds&quot;)</code></pre>
 <p><br></p>
 <p><br></p>
 <hr />

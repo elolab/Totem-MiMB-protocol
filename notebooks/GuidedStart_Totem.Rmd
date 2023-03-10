@@ -546,6 +546,13 @@ cowplot::plot_grid(
 
 The pseudotime and trajectory obtained with `Totem` agrees well with `Palantir`. Contrary to the inferred trajectory with the tSNE projection in quick start guide, by using a more adequate dimensional reduction projection such as PCA, `Totem` was able to predict correctly the trajectory related with the CLP. 
 
+Finally, the `sce` object with all the results stored on it is exported. 
+ 
+```{r export sce obj}
+## Export sce object
+saveRDS(object = sce, file = "../results/sce_guidedstart.rds")
+```
+ 
 <br>
 
 <br>

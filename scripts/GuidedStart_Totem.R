@@ -150,5 +150,8 @@ cowplot::plot_grid(
    ncol=2
    ) 
 
+## Export sce object
+saveRDS(object = sce, file = "../results/sce_guidedstart.rds")
+
 ## R packages and versions used in these analyses
 sessionInfo()
