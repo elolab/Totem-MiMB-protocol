@@ -56,7 +56,7 @@ The data set `human_cd34_bm_rep1.rds` was generated with the R script `download_
 >Create docker image & launch container (locally) 
 
 #### Build 'repro-totem-ti' Docker image: 
-`docker build -t repro-totem-ti .`
+`docker buildx build --platform linux/amd64,linux/arm64 -t repro-totem-ti . `
 
 #### List the Docker image - 'repro-totem-ti' (under REPOSITORY):
 `docker images -a`
@@ -110,8 +110,19 @@ The data set `human_cd34_bm_rep1.rds` was generated with the R script `download_
 #### Execute the 'run_slurm_singularity.sh' bash script with Slurm to launch the Singularity container:
 `sbatch ./run_slurm_singularity.sh Totem`
 
-#### Open the file createdi 'slurm-<slurm-job.id>.out' and check the ssh command to type in a new local shell
+#### Open the file created 'slurm-<slurm-job.id>.out' and check the ssh command to type in a new local shell
 
 #### Type the following in the browser and use your user name in the cluster as username and as password 'Totem':
 `http://localhost:8787/`
+
+<br>
+
+---
+
+<br>
+
+>Create cross-platform (amd64,arm64) `repro-totem-ti` image for compatibility with arm64 M1 MacBooks
+
+#### Build and push the image to temporary Docker Hub repository (first install `buildx`, `binfmt` and set up `mybuilder`):
+`docker buildx build --no-cache --push --platform linux/amd64,linux/arm64 -t aggode/repro-totem-ti:cross-platform -f Dockerfile-cross-platform .`
 
