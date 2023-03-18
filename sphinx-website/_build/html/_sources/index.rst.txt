@@ -11,10 +11,10 @@ Website supporting the cell inference trajectory protocol with Totem to be publi
 `User-friendly protocol for inferring tree-shaped single-cell trajectories with Totem <User-friendly protocol for inferring tree-shaped single-cell trajectories with Totem>`_.
 
 .. toctree::
-   :maxdepth: 1
-   :hidden:
-   :caption: Protocols
+   :maxdepth: 2 
+   :hidden: 
 
-   Protocols/QuickStart
-   Protocols/GuidedStart
+   installation 
+   setup
+   protocols
 
