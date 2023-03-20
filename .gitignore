@@ -14,8 +14,10 @@ scripts/*
 !scripts/QuickStart_Totem.R
 !scripts/GuidedStart_Totem.R
 !scripts/download_h5ad_to_SCE_rds_script.R
+!scripts/make_MS_figs.R
 .config
 .local
 .conda
 .Rhistory
 .python_history
+.cache
