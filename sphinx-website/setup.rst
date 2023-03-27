@@ -27,3 +27,6 @@ Use the following credentials to login in RStudio Server: ::
    
    Password: Totem
 
+
+.. figure:: gifs/setup.gif
+
