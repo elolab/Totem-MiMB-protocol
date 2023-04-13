@@ -53,25 +53,56 @@ The data set `human_cd34_bm_rep1.rds` was generated with the R script `download_
 
 <br>
 
->Create docker image & launch container (locally) 
+>Build `repro-totem-ti` locally:
 
-#### Build 'repro-totem-ti' Docker image: 
-`docker buildx build --platform linux/amd64,linux/arm64 -t repro-totem-ti . `
+### Clone through SSH password-protected key this repository: 
+`git clone git@github.com:elolab/Totem-protocol.git`
 
-#### List the Docker image - 'repro-totem-ti' (under REPOSITORY):
+#### Build `repro-totem-ti` Docker image from `Dockerfile`:
+`docker build -t repro-totem-ti .` 
+
+#### List the Docker image `repro-totem-ti` (under REPOSITORY):
 `docker images -a`
 
-#### Create directory structure: 
-`mkdir data scripts notebooks results`
+#### Create folder to save results: 
+`mkdir -p repro-totem-ti/results`
+
+`cd repro-totem-ti`
 
 #### Launch the container (see more instructions at: https://rocker-project.org/images/versioned/rstudio.html ):
 `docker run --rm -ti -e PASSWORD=Totem -p 8787:8787 \`
 
-`	-v $PWD/data:/home/rstudio/data -v $PWD/scripts:/home/rstudio/scripts \`
-
-`	-v $PWD/notebooks:/home/rstudio/notebooks -v $PWD/results:/home/rstudio/results \`
+`	-v $PWD/results:/home/rstudio/results \`
 	
 `	repro-totem-ti`
+
+#### Type the following hyperlink in the browser: 
+`http://localhost:8787/`
+
+#### Use the following credentials: 
+`Username: rstudio`
+
+`Password: Totem`
+
+<br>
+
+---
+
+<br>
+
+>Launch container (locally) from Docker Hub `elolab/repro-totem-ti` 
+
+#### Create folder to save results: 
+`mkdir -p repro-totem-ti/results`
+
+`cd repro-totem-ti`
+
+#### Launch the container (see more instructions at: https://rocker-project.org/images/versioned/rstudio.html ):
+`docker run --rm -ti -e PASSWORD=Totem -p 8787:8787 \`
+
+`	-v $PWD/results:/home/rstudio/results \`
+	
+`	elolab/repro-totem-ti`
 
 #### Run the bash script `run_docker.sh` as an alternative to the command above (optional):
 `./run_docker.sh`
@@ -90,7 +121,7 @@ The data set `human_cd34_bm_rep1.rds` was generated with the R script `download_
 
 <br>
 
->Create Singularity image from docker 'repro-totem-ti' Docker image to running it remotely in a server 
+>Create Singularity image from docker 'repro-totem-ti' Docker image locally to running it remotely in a server 
 
 #### Check the IMAGE ID of 'repro-totem-ti': 
 `docker images`
@@ -121,7 +152,7 @@ The data set `human_cd34_bm_rep1.rds` was generated with the R script `download_
 
 <br>
 
->Create cross-platform (amd64,arm64) `repro-totem-ti` image for compatibility with arm64 M1 MacBooks
+>Create cross-platform (amd64,arm64) `repro-totem-ti` image for compatibility with arm64 M1 MacBooks (ongoing)
 
 #### Build and push the image to temporary Docker Hub repository (first install `buildx`, `binfmt` and set up `mybuilder`):
 `docker buildx build --no-cache --push --platform linux/amd64,linux/arm64 -t aggode/repro-totem-ti:cross-platform -f Dockerfile-cross-platform .`

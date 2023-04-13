@@ -78,16 +78,15 @@
 <section id="id1">
 <h2>Setup<a class="headerlink" href="#id1" title="Permalink to this heading"></a></h2>
 <p>Create directory structure:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mkdir</span> <span class="n">data</span> <span class="n">scripts</span> <span class="n">notebooks</span> <span class="n">results</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mkdir</span> <span class="o">-</span><span class="n">p</span> <span class="n">repro</span><span class="o">-</span><span class="n">totem</span><span class="o">-</span><span class="n">ti</span><span class="o">/</span><span class="n">results</span>
+
+<span class="n">cd</span> <span class="n">repro</span><span class="o">-</span><span class="n">totem</span><span class="o">-</span><span class="n">ti</span>
 </pre></div>
 </div>
-<p>Then, launch the <code class="docutils literal notranslate"><span class="pre">repro-totem-ti</span></code> container in the Linux terminal binding the folders created above to the container’s folders with the command:</p>
+<p>Then, launch the <code class="docutils literal notranslate"><span class="pre">repro-totem-ti</span></code> container in the Linux terminal binding the <cite>results</cite> folder created above to the container’s folder with the command:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>docker run --rm -ti -e PASSWORD=Totem -p 8787:8787 \
-     -v $PWD/data:/home/rstudio/data \
-     -v $PWD/scripts:/home/rstudio/scripts \
-     -v $PWD/notebooks:/home/rstudio/notebooks \
      -v $PWD/results:/home/rstudio/results \
-     compbiomed/repro-totem-ti
+     elolab/repro-totem-ti
 </pre></div>
 </div>
 <p>Finally, go to the browser of your choice (e.g., Chrome, Firefox) and type the following link:</p>
