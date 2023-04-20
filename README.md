@@ -30,11 +30,13 @@ This parsed data set is distributed with the docker image ([elolab/repro-totem-t
 
 ## Directory Structure
 
-   + docs: folder comprising the material used by GitHub Pages to display the website documentation: [https://elolab.github.io/Totem-protocol](https://elolab.github.io/Totem-protocol)
+   + `docs`: folder comprising the material used by GitHub Pages to display the website documentation: [https://elolab.github.io/Totem-protocol](https://elolab.github.io/Totem-protocol)
 
-   + sphinx-website: files used to build the website documentation with the [Sphinx](https://www.sphinx-doc.org/en/master/) application that are used in the `docs` folder to display the website
+   + `sphinx-website`: folder comprising files used to build the website documentation with the [Sphinx](https://www.sphinx-doc.org/en/master/) application that are used in the `docs` folder to display the website
+   
+   + `Dockerfile`: file with the instructions to build docker image
 
-   + scripts: 
+   + `scripts` folder: 
    
       + `download_h5ad_to_SCE_rds_script.R`: R script used to obtain `human_cd34_bm_rep1.rds` object
       
@@ -42,7 +44,7 @@ This parsed data set is distributed with the docker image ([elolab/repro-totem-t
       
       + `GuidedStart_Totem.R`: **GuidedStart** R script analysis protocol
 
-   + notebooks: 
+   + `notebooks` folder: 
    
       + `QuickStart_Totem.Rmd`: **QuickStart** R markdown notebook analysis protocol
 
@@ -128,7 +130,9 @@ This parsed data set is distributed with the docker image ([elolab/repro-totem-t
 
 ## Launch Container Remotely
 
-A docker image can be converted into a Singularity image locally or just pushed from Docker Hub. Below it is presented both solutions. 
+A docker image can be converted into a Singularity image locally (1) or just pushed from Docker Hub (2). Below it is presented both solutions. 
+
+<br>
 
 >(1) Convert `repro-totem-ti` docker image created locally into a Singularity image
 
@@ -147,6 +151,8 @@ A docker image can be converted into a Singularity image locally or just pushed 
 
 ### Upload this repository to the server environment  
 
+<br>
+
 >(2) Pull image from Docker Hub `elolab/repro-totem-ti`
 
 ### Clone through SSH password-protected key this repository to your server/cluster environment: 
@@ -160,6 +166,8 @@ A docker image can be converted into a Singularity image locally or just pushed 
 
 ### Pull the `elolab/repro-totem-ti` image from Docker Hub into the `imgs` folder: 
 `singularity pull --dir imgs/ repro-totem-ti.sif docker://elolab/repro-totem-ti:latest`
+
+<br>
 
 >Submit Slurm job to launch RStudio server through the Singularity image and access it locally
 
