@@ -38,27 +38,23 @@ The content of this tutorial is enumerated and described below.
 
 <br>
 
-   1. Prepare data: importing data to R and preparing it to `Totem`
+   1. Preprocessing: importing data to R and preparing it to `Totem`
    
    2. Feature selection: selecting 2K highly variable features for dimensional reduction with `scran`
    
-   3. Dimensional reduction: running dimensional reduction for clustering (PCA) and visualization (UMAP) with `Totem`
+   3. Dimensionality reduction: dimensionality reduction for clustering (PCA) and visualization (UMAP) with `Totem`
    
-   4. Clustering & MST: running CLARA _k_-medoids clustering algorithm and multiple spanning trees (MSTs) with `Totem` 
+   4. Clustering and MST: running CLARA _k_-medoids clustering algorithm and multiple spanning trees (MSTs) with `Totem` 
 
    5. Cell connectivity: visualize and interpret cell connectivity estimated by `Totem`
 
-   6. Select clustering: selecting and visualizing top 10 clustering and MST results with `Totem`
+   6. Select clustering: selecting and visualizing top six clustering and MST results with `Totem`
 
    7. Smooth MST: smoothing the selected MSTs with the principal curves algorithm with `Totem`
 
    8. Define a root: define the most probable root for the inferred trajectory 
 
    9. Pseudotime: visualize `Totem`'s pseudotime and compare it with `Palantir`'s 
-
-<br>
-
-`Totem` is a R package published by Smolander et al. (2022) and it is publicly available in github ([https://github.com/elolab/Totem](https://github.com/elolab/Totem)).
 
 <br>
 
@@ -114,7 +110,7 @@ set.seed(1204)
 
 Import the `RDS` `SingleCellExperiment` class object storing the scRNA-seq data set with the function `readRDS` (file available at: `data/human_cd34_bm_rep1.rds`). 
 
-`Totem` conveniently uses the `SingleCellExperiment` (`SCE` for short) `R` package and class to store all the information that generates in its workflow. This can be accessed through: `metadata(sce)$Totem` (which returns a list of objects generated in the `Totem` workflow). 
+`Totem` conveniently uses the `SingleCellExperiment` (`SCE` for short) `R` package and class to store all the information that generates in its workflow. This can be accessed through: `metadata(sce)$totem` (which returns a list of objects generated in the `Totem` workflow). 
 
 A `SCE` object can store several gene expression assays (raw, log counts, etc), metadata (cell/gene) and dimensional reduction data. Please have a look into the [Chapter 4 The SingleCellExperiment class](https://bioconductor.org/books/3.17/OSCA.intro/the-singlecellexperiment-class.html) of the [OSCA](https://bioconductor.org/books/3.17/OSCA.intro/) book to learn more about the `SingleCellExperiment` class and functionality.  
 
@@ -217,7 +213,7 @@ The object `hvg` is a character vector with the names of top 2K HVG (`r paste(he
 
 The next step in the workflow consists in dimensionality reduction for clustering purposes downstream of this stage. 
 
-The user can use any low-dimensional representation method of its choice that represents the data, such as PCA (Principal Component Analysis), UMAP (Uniform Manifold Approximation and Projection for Dimension Reduction), _t_-SNE ( _t_-distributed Stochastic Neighbourhood Embedding) or LMDS (landmark Multi-Dimensional Scaling). 
+The user can use any low-dimensional representation method of its choice that represents the data, such as PCA (Principal Component Analysis), UMAP (Uniform Manifold Approximation and Projection), _t_-SNE ( _t_-distributed Stochastic Neighbourhood Embedding) or LMDS (Landmark Multi-Dimensional Scaling). 
 
 Next We will use PCA, but the `Totem` vignette provides some tips if you want to use other method (see [vignette](https://htmlpreview.github.io/?https://github.com/elolab/Totem-benchmarking/blob/main/Totem.html#tips)).
 
@@ -245,7 +241,7 @@ reducedDim(sce, type = "pca") <- own_dim_red # type can be 'pca', 'umap' whateve
 
 The PCA can be visualized together with the elbow plot highlighting the standard deviation of every component to help us to decide the numbers of components that should be selected for clustering and UMAP projection (which can rely on the PCA). 
 
-The code below calculates the standard deviation for each principal component (PC) and, then, it uses the dplyr and ggplot2 functions to plot the results. In addition is also plotted the top 20 PCs with the cells highlighted by cell type. 
+The code below calculates the standard deviation for each principal component (PC) and, then, it uses the `dplyr` and `ggplot2` functions to plot the results. In addition is also plotted the top 20 PCs with the cells highlighted by cell type. 
 
 ```{r pca var, fig.width=16, fig.height=9}
 ## Inspect PCA variance
@@ -323,7 +319,7 @@ plotReducedDim(object = sce, dimred = "umap", colour_by = "cell_types_short", po
   scale_color_manual(name= "Cell Types", 
                      values=as.character(unlist(metadata(sce)$cluster_colors)[!duplicated(levels(sce$cell_types_short))])) + 
   theme_void()
-reducedDim(sce, "uma") <- NULL # remove UMAP from 'sce' object
+reducedDim(sce, "umap") <- NULL # remove UMAP from 'sce' object
 ```
 
 <br>
@@ -340,7 +336,7 @@ reducedDim(sce, "uma") <- NULL # remove UMAP from 'sce' object
 
 <br>
 
-Clustering is one of the main steps in the `Totem` workflow and the one that takes more time and computational resources. `Totem` is use the 6-dimensional latent representations of PCA are used to cluster the data set with the k-medoids (CLARA) algorithm using an expected number of clusters varying between 3-20 (`k.range = 3:20`), removing clusters with <5 cells (`min.cluster.size = 5`) and running the clustering algorithm 10K times (`N.clusterings = 10000`). These are the default parameters. After filtering out clustering results due to `min.cluster.size`, the total number of clustering results will be lower than `N.clusterings`. At this stage, it is also estimated a MST (Minimum Spanning Tree) for each clustering result. 
+Clustering is one of the main steps in the `Totem` workflow and the one that takes more time and computational resources. `Totem` uses the 6-dimensional latent representations of PCA to cluster the data set with the _k_-medoids (CLARA) algorithm using an expected number of clusters varying between 3-20 (`k.range = 3:20`), removing clusters with <5 cells (`min.cluster.size = 5`) and running the clustering algorithm 10K times (`N.clusterings = 10000`). These are the default parameters. After filtering out clustering results due to `min.cluster.size`, the total number of clustering results will be lower than `N.clusterings`. At this stage, it is also estimated a MST (Minimum Spanning Tree) for each clustering result. 
 
 ```{r cluster}
 ## Clustering scRNA-seq data w/ CLARA (k-medoids)
@@ -396,7 +392,7 @@ According to the expected low values of cell connectivity corresponds to termina
 
 The clustering can be selected based on 5 methods described in detail in the `Totem` vignette (see [vignette](https://htmlpreview.github.io/?https://github.com/elolab/Totem-benchmarking/blob/main/Totem.html#clustering-selection)). You can also see the function documentation by typing the following in the R console: `?SelectClusterings`.
 
-Here, We selected the top 6 models with the method 3 which was demonstrated to perform well compared with other methods [@smolander2022totem]. Method 3 relies on the average of two metrics to select the top 5, i.e., `selection.N.models=5`, best clusterings, i.e., the clustering results that are more congruent and agree better with the tree structure:
+Here, We selected the top 6 models with the method 3 which was demonstrated to perform well compared with other methods [@smolander2022totem]. Method 3 relies on the average of two metrics to select the top 6, i.e., `selection.N.models=6`, best clusterings, i.e., the clustering results that are more congruent and agree better with the tree structure:
 
    1. VRC (Variance Ratio Criterion) or _Calinski-Harabasz score_: it measures the within- and between-cluster dispersion
    

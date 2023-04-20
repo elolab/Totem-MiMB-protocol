@@ -48,9 +48,9 @@ The content of this tutorial is enumerated and described below.
       
       2.2. smoothing selected clustering/MSTs 
    
-   3. Visualization: visualizing `Totem`'s cell connectivity, clustering, re-rooting and trajectory's topology 
+   3. Visualization: visualizing `Totem`'s cell connectivity, clustering, and trajectory's topology 
 
-   4. Pseudotime comparison: comparing `Totem` vs `Palantir` pseudotimes
+   4. Pseudotime: re-rooting and comparison of `Totem`'s pseudotime estimates to those of `Palantir`
 
 <br>
 
@@ -115,7 +115,7 @@ sce <- readRDS(file = "../data/human_cd34_bm_rep1.rds")
 
 <details><summary><i>What is a `SingleCellExperiment` class object?</i></summary><p> 
 
-`Totem` conveniently uses the `SingleCellExperiment` (`SCE` for short) `R` package and class to store all the information that generates in its workflow. This can be accessed through: `metadata(sce)$Totem` (which returns a list of objects generated in the `Totem` workflow). 
+`Totem` conveniently uses the `SingleCellExperiment` (`SCE` for short) `R` package and class to store all the information that generates in its workflow. This can be accessed through: `metadata(sce)$totem` (which returns a list of objects generated in the `Totem` workflow). 
 
 A `SCE` object can store several gene expression assays (raw, log counts, etc), metadata (cell/gene) and dimensional reduction data. Please have a look into the [Chapter 4 The SingleCellExperiment class](https://bioconductor.org/books/3.17/OSCA.intro/the-singlecellexperiment-class.html) of the [OSCA](https://bioconductor.org/books/3.17/OSCA.intro/) book to learn more about the `SingleCellExperiment` class and functionality.  
 
@@ -212,7 +212,7 @@ sce <- RunSmoothing(object = sce)
 
 <br>
 
-The `Totem`'s cell connectivities, clustering/MST, trajectory and pseudotime can be visual inspected after running `Totem`'s TI method.  
+The `Totem`'s cell connectivities, clustering/MST and trajectory can be visual inspected after running `Totem`'s TI method.  
 
 <br>
 
@@ -272,13 +272,23 @@ cowplot::plot_grid(
 
 <br>
 
+---
+
+<br>
+
+<br>
+
+## (4) Pseudotime
+
+<br>
+
 ### Rooting
 
 <br>
 
-At this stage the root can be defined be giving the cluster number. From the plots visualized above cluster 15 seems to be a good candidate for the root which corresponds to the more imature HSC cell type (Hematopoietic stem cells). 
+At this stage the root can be defined by giving the cluster number. From the plots visualized above cluster 15 seems to be a good candidate for the root which corresponds to the more imature HSC cell type (hematopoietic stem cells). 
 
-The `ChangeTrajRoot()` allows us to change the root by providing the name of the clustering/MST result (`traj.name = select.cluster`) and the cluster number that should be root (`root.cluster = root.cluster`).
+The `ChangeTrajRoot()` allow us to change the root by providing the name of the clustering/MST result (`traj.name = select.cluster`) and the cluster number that should be root (`root.cluster = root.cluster`).
 
 This step can be skipped, but, in that case, the root will be randomly assigned. 
 
@@ -314,13 +324,7 @@ cowplot::plot_grid(
 
 <br>
 
----
-
-<br>
-
-<br>
-
-## (4) Pseudotime comparison
+### Pseudotime comparison
 
 <br>
 
@@ -343,9 +347,9 @@ cowplot::plot_grid(
 
 <br>
 
-Despite the good correlation between pseudotime obtained between `Totem`'s and `Palantir`'s and the correct prediction of terminal states once the root was provided, the lymphoid lineage was wrongly predicted. CLP (Common Lymphoid Progenitor) should had been diverging from HSC (Hematopoietic stem cells). 
+Despite the good correlation between pseudotime obtained between `Totem`'s and `Palantir`'s and the correct prediction of terminal states once the root was provided, the lymphoid lineage was wrongly predicted. CLP (common lymphoid progenitor) should had been diverging from HSC (hematopoietic stem cells). 
 
-One of the reasons that may explain this wrong prediction is how well the low-dimensional representation used for clustering fairly represents the relationship between cell types. The CLP population appears farther apart from the HSC than the cluster MyP (Myeloid Progenitor) in the two-dimensional tSNE projection making more likely to branch from the latter than the former.  
+One of the reasons that may explain this wrong prediction is how well the low-dimensional representation used for clustering fairly represents the relationship between cell types. The CLP population appears farther apart from the HSC than the cluster MyP (myeloid progenitor) in the two-dimensional tSNE projection making more likely to branch from the latter than the former.  
 
 In general, the user should be very critical about lineages towards cell populations/clusters that do not show a continuous development in the dimensional reduction projection used for clustering. 
 

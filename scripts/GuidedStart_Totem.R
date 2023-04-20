@@ -92,7 +92,7 @@ plotReducedDim(object = sce, dimred = "umap", colour_by = "cell_types_short", po
   scale_color_manual(name= "Cell Types", 
                      values=as.character(unlist(metadata(sce)$cluster_colors)[!duplicated(levels(sce$cell_types_short))])) + 
   theme_void()
-reducedDim(sce, "uma") <- NULL # remove UMAP from 'sce' object
+reducedDim(sce, "umap") <- NULL # remove UMAP from 'sce' object
 
 ## Clustering scRNA-seq data w/ CLARA (k-medoids)
 set.seed(123)
