@@ -8,7 +8,7 @@ The docker application can be installed in Ubuntu under the terminal with the ``
 
         apt-get install docker.io 
 
-Assuming that docker is installed, pull the ``repro-totem-ti`` image from Docker Hub by typing the command in the Linux terminal: ::
+Assuming that docker is installed, pull the ``elolab/repro-totem-ti`` image from Docker Hub by typing the command in the Linux terminal: ::
 
-        docker pull compbiomed/repro-totem-ti
+        docker pull elolab/repro-totem-ti
 

@@ -6,9 +6,11 @@
 Welcome to Totem's MiMB protocol's documentation!
 =================================================
 
-Website supporting the cell inference trajectory protocol with Totem to be published at Springer Nature's Methods in Molecular Biology: 
+Website supporting the cell inference trajectory protocols with ``Totem`` to be published at Springer Nature's Methods in Molecular Biology: 
 
-`User-friendly protocol for inferring tree-shaped single-cell trajectories with Totem <User-friendly protocol for inferring tree-shaped single-cell trajectories with Totem>`_.
+`User-friendly protocols for inferring tree-shaped single-cell trajectories with Totem <User-friendly protocol for inferring tree-shaped single-cell trajectories with Totem>`_.
+
+Authors: António G.G. Sousa (aggode@utu.fi), Johannes Smolander (johannes.smolander@utu.fi), Sini Junttila (simaju@utu.fi), Laura L. Elo (laura.elo@utu.fi)
 
 .. toctree::
    :hidden:

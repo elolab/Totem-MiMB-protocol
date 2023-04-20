@@ -10,7 +10,7 @@ Create directory structure: ::
 
    cd repro-totem-ti
 
-Then, launch the ``repro-totem-ti`` container in the Linux terminal binding the `results` folder created above to the container’s folder with the command: :: 
+Then, launch the ``elolab/repro-totem-ti`` container in the Linux terminal binding the `results` folder created above to the container’s folder with the command: :: 
    
    docker run --rm -ti -e PASSWORD=Totem -p 8787:8787 \
         -v $PWD/results:/home/rstudio/results \
@@ -27,5 +27,5 @@ Use the following credentials to login in RStudio Server: ::
    Password: Totem
 
 
-.. figure:: gifs/setup.gif
+.. .. figure:: gifs/setup.gif
 

@@ -83,7 +83,7 @@
 <span class="n">cd</span> <span class="n">repro</span><span class="o">-</span><span class="n">totem</span><span class="o">-</span><span class="n">ti</span>
 </pre></div>
 </div>
-<p>Then, launch the <code class="docutils literal notranslate"><span class="pre">repro-totem-ti</span></code> container in the Linux terminal binding the <cite>results</cite> folder created above to the container’s folder with the command:</p>
+<p>Then, launch the <code class="docutils literal notranslate"><span class="pre">elolab/repro-totem-ti</span></code> container in the Linux terminal binding the <cite>results</cite> folder created above to the container’s folder with the command:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>docker run --rm -ti -e PASSWORD=Totem -p 8787:8787 \
      -v $PWD/results:/home/rstudio/results \
      elolab/repro-totem-ti
@@ -99,9 +99,6 @@
 <span class="n">Password</span><span class="p">:</span> <span class="n">Totem</span>
 </pre></div>
 </div>
-<figure class="align-default">
-<img alt="_images/setup.gif" src="_images/setup.gif" />
-</figure>
 </section>
 </section>
 
