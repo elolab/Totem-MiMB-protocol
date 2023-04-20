@@ -1,6 +1,6 @@
 # Totem protocols for single-cell trajectory inference
 
-Repository with data analyses regarding the cell inference trajectory protocol with _Totem_ to be published at Springer Nature's Methods in Molecular Biology: _User-friendly protocols for inferring tree-shaped single-cell trajectories with Totem_
+Repository with data analyses regarding the cell inference trajectory protocols with _Totem_ to be published at Springer Nature's Methods in Molecular Biology: _User-friendly protocols for inferring tree-shaped single-cell trajectories with Totem_
 
 Authors: António G.G. Sousa (<aggode@utu.fi>), Johannes Smolander (<johannes.smolander@utu.fi>), Sini Junttila (<simaju@utu.fi>), Laura L. Elo (<laura.elo@utu.fi>) 
 
@@ -9,6 +9,8 @@ Authors: António G.G. Sousa (<aggode@utu.fi>), Johannes Smolander (<johannes.sm
 ## Contents:
 
 * [Data Set](#data-set)
+
+* [Data Analysis Protocols](#data-analysis-protocols)
 
 * [Directory Structure](#directory-structure)
 
@@ -25,6 +27,22 @@ Authors: António G.G. Sousa (<aggode@utu.fi>), Johannes Smolander (<johannes.sm
 The data set `human_cd34_bm_rep1.rds` was parsed with the R script `download_h5ad_to_SCE_rds_script.R` (under the `scripts` folder). It is a parsed `SingleCellExperiment` `RDS` object corresponding to the anndata h5ad `human_cd34_bm_rep1.h5ad` available on [HCA Portal](https://data.humancellatlas.org/explore/projects/091cf39b-01bc-42e5-9437-f419a66c8a45) and published by [Setty et al., 2019](https://www.nature.com/articles/s41587-019-0068-4).
 
 This parsed data set is distributed with the docker image ([elolab/repro-totem-ti](https://hub.docker.com/r/elolab/repro-totem-ti) - see section [Launch Container Locally](#launch-container-locally)). Alternatively, it can be downloaded from Zenodo: [10.5281/zenodo.7845709](https://doi.org/10.5281/zenodo.7845709).
+
+<br>
+
+## Data Analysis Protocols
+
+Two user-friendly protocols for inferring tree-shaped single-cell trajectories and pseudotime from single-cell transcriptomics data with `Totem` are provided in this repository under `notebooks` or `scripts` folders: **QuickStart** and **GuidedStart**. **QuickStart** provides a simple and practical example, whereas the **GuidedStart** protocol details the analysis step-by-step. 
+
+Both protocols are applied to the data set described in section [Data Set](#data-set). 
+
+All the analyses can be fully reproduced in Linux, MacOS, and Windows OS (amd64 architecture) with >8Gb of RAM using the provided docker image distributed with notebooks, scripts, and data in Docker Hub (`elolab/repro-totem-ti`). See the schematic figure below which describes and compares the main step protocols. 
+
+<br>
+
+![scheme](sphinx-website/_build/html/_images/figure_1.jpg) 
+
+<br>
 
 <br>
 
