@@ -108,7 +108,7 @@ This parsed data set is distributed with the docker image ([elolab/repro-totem-t
 
 `cd repro-totem-ti`
 
-### Launch the container (see more instructions at [rocker](https://rocker-project.org/images/versioned/rstudio.html)):
+### Launch the `elolab/repro-totem-ti` container (see more instructions at [rocker](https://rocker-project.org/images/versioned/rstudio.html)):
 `docker run --rm -ti -e PASSWORD=Totem -p 8787:8787 \`
 
 `	-v $PWD/results:/home/rstudio/results \`
@@ -134,7 +134,7 @@ A docker image can be converted into a Singularity image locally (1) or just pus
 
 <br>
 
->(1) Convert `repro-totem-ti` docker image created locally into a Singularity image
+>(1) Convert `repro-totem-ti` docker image created locally into a Singularity image (if you run the section [Build Docker Image](#build-docker-image))
 
 ### Check the IMAGE ID of `repro-totem-ti` created above: 
 `docker images`
