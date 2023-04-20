@@ -2,7 +2,7 @@
 
 Repository with data analyses regarding the cell inference trajectory protocol with _Totem_ to be published at Springer Nature's Methods in Molecular Biology: _User-friendly protocols for inferring tree-shaped single-cell trajectories with Totem_
 
-Author(s): António G.G. Sousa (<aggode@utu.fi>), Johannes Smolander (<johannes.smolander@utu.fi>), Sini Junttila (<simaju@utu.fi>), Laura L. Elo (<laura.elo@utu.fi>) 
+Authors: António G.G. Sousa (<aggode@utu.fi>), Johannes Smolander (<johannes.smolander@utu.fi>), Sini Junttila (<simaju@utu.fi>), Laura L. Elo (<laura.elo@utu.fi>) 
 
 <br>
 
