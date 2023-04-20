@@ -32,9 +32,6 @@ RUN R --no-echo --no-restore --no-save -e "install.packages('hexbin')"
 RUN R --no-echo --no-restore --no-save -e "BiocManager::install('zellkonverter')"
 RUN R --no-echo --no-restore --no-save -e "BiocManager::install('scater')"
 
-# Run command:
-CMD ["/bin/bash"]
-
 # Descriptions: 
 MAINTAINER António Sousa (aggode@utu.fi)
 LABEL Description: Container to reproduce single-cell RNA-seq trajectory inference analyses with Totem
