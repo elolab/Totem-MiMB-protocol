@@ -22,7 +22,7 @@ Author(s): António G.G. Sousa (<aggode@utu.fi>), Johannes Smolander (<johannes.
 
 ## Data Set
 
-The data set `human_cd34_bm_rep1.rds` was parsed with the R script `download_h5ad_to_SCE_rds_script.R` (under the `scripts` folder). It is a parsed `SingleCellExperiment` `RDS` object corresponding to the anndata h5ad `human_cd34_bm_rep1.h5ad` available on [HCA Portal]() and published by [Setty et al., 2019](https://www.nature.com/articles/s41587-019-0068-4).
+The data set `human_cd34_bm_rep1.rds` was parsed with the R script `download_h5ad_to_SCE_rds_script.R` (under the `scripts` folder). It is a parsed `SingleCellExperiment` `RDS` object corresponding to the anndata h5ad `human_cd34_bm_rep1.h5ad` available on [HCA Portal](https://data.humancellatlas.org/explore/projects/091cf39b-01bc-42e5-9437-f419a66c8a45) and published by [Setty et al., 2019](https://www.nature.com/articles/s41587-019-0068-4).
 
 This parsed data set is distributed with the docker image ([elolab/repro-totem-ti](https://hub.docker.com/r/elolab/repro-totem-ti) - see section [Launch Container Locally](#launch-container-locally)). Alternatively, it can be downloaded from Zenodo: [10.5281/zenodo.7845709](https://doi.org/10.5281/zenodo.7845709).
 
