@@ -82,37 +82,37 @@ All the analyses can be fully reproduced in Linux, MacOS, and Windows OS (amd64 
 
 ## Build Docker Image
 
-### Clone through SSH password-protected key this repository: 
+#### Clone through SSH password-protected key this repository: 
 `git clone git@github.com:elolab/Totem-protocol.git`
 
-### Enter the repository folder cloned: 
+#### Enter the repository folder cloned: 
 `cd Totem-protocol`
 
-### Create `data` folder: 
+#### Create `data` folder: 
 `mkdir data results`
 
-### Download data from Zenodo repository: 
+#### Download data from Zenodo repository: 
 `wget https://zenodo.org/record/7845709/files/human_cd34_bm_rep1.rds?download=1 \`
 
 `    -O data/human_cd34_bm_rep1.rds
 
-### Build `repro-totem-ti` Docker image from `Dockerfile`:
+#### Build `repro-totem-ti` Docker image from `Dockerfile`:
 `docker build -t repro-totem-ti .` 
 
-### List the docker image `repro-totem-ti` (under REPOSITORY):
+#### List the docker image `repro-totem-ti` (under REPOSITORY):
 `docker images -a`
 
-### Launch the container (see more instructions at: https://rocker-project.org/images/versioned/rstudio.html ):
+#### Launch the container (see more instructions at: https://rocker-project.org/images/versioned/rstudio.html ):
 `docker run --rm -ti -e PASSWORD=Totem -p 8787:8787 \`
 
 `	-v $PWD/results:/home/rstudio/results \`
 	
 `	repro-totem-ti`
 
-### Type the following hyperlink in the browser: 
+#### Type the following hyperlink in the browser: 
 `http://localhost:8787/`
 
-### Use the following credentials: 
+#### Use the following credentials: 
 `Username: rstudio`
 
 `Password: Totem`
@@ -121,25 +121,25 @@ All the analyses can be fully reproduced in Linux, MacOS, and Windows OS (amd64 
 
 ## Launch Container Locally
 
-### Create folder to save results: 
+#### Create folder to save results: 
 `mkdir -p repro-totem-ti/results`
 
 `cd repro-totem-ti`
 
-### Launch the `elolab/repro-totem-ti` container (see more instructions at [rocker](https://rocker-project.org/images/versioned/rstudio.html)):
+#### Launch the `elolab/repro-totem-ti` container (see more instructions at [rocker](https://rocker-project.org/images/versioned/rstudio.html)):
 `docker run --rm -ti -e PASSWORD=Totem -p 8787:8787 \`
 
 `	-v $PWD/results:/home/rstudio/results \`
 	
 `	elolab/repro-totem-ti`
 
-### Run the bash script `run_docker.sh` as an alternative to the command above (optional):
+#### Run the bash script `run_docker.sh` as an alternative to the command above (optional):
 `./run_docker.sh`
 
-### Type the following hyperlink in the browser: 
+#### Type the following hyperlink in the browser: 
 `http://localhost:8787/`
 
-### Use the following credentials: 
+#### Use the following credentials: 
 `Username: rstudio`
 
 `Password: Totem`
@@ -154,46 +154,46 @@ A docker image can be converted into a Singularity image locally (1) or just pus
 
 >(1) Convert `repro-totem-ti` docker image created locally into a Singularity image (if you run the section [Build Docker Image](#build-docker-image))
 
-### Check the IMAGE ID of `repro-totem-ti` created above: 
+#### Check the IMAGE ID of `repro-totem-ti` created above: 
 `docker images`
 
-### Create 'imgs' directory and save the tarball `repro-totem-ti.tar`:
+#### Create 'imgs' directory and save the tarball `repro-totem-ti.tar`:
 `mkdir imgs`
 
 `sudo docker save <IMAGE ID> -o imgs/repro-totem-ti.tar`
 
-### Create Singularity image from tarball `repro-totem-ti.tar`:
+#### Create Singularity image from tarball `repro-totem-ti.tar`:
 `cd imgs`
 
 `sudo singularity build repro-totem-ti.sif docker-archive://repro-totem-ti.tar`
 
-### Upload this repository to the server environment  
+#### Upload this repository to the server environment  
 
 <br>
 
 >(2) Pull image from Docker Hub `elolab/repro-totem-ti`
 
-### Clone through SSH password-protected key this repository to your server/cluster environment: 
+#### Clone through SSH password-protected key this repository to your server/cluster environment: 
 `git clone git@github.com:elolab/Totem-protocol.git`
 
-### Enter the repository folder cloned: 
+#### Enter the repository folder cloned: 
 `cd Totem-protocol`
 
-### Create directory structure: 
+#### Create directory structure: 
 `mkdir results imgs` 
 
-### Pull the `elolab/repro-totem-ti` image from Docker Hub into the `imgs` folder: 
+#### Pull the `elolab/repro-totem-ti` image from Docker Hub into the `imgs` folder: 
 `singularity pull --dir imgs/ repro-totem-ti.sif docker://elolab/repro-totem-ti:latest`
 
 <br>
 
 >Submit Slurm job to launch RStudio server through the Singularity image and access it locally
 
-### Execute the 'run_slurm_singularity.sh' bash script with Slurm to launch the Singularity container:
+#### Execute the 'run_slurm_singularity.sh' bash script with Slurm to launch the Singularity container:
 `sbatch ./run_slurm_singularity.sh Totem`
 
-### Open the file created 'slurm-<slurm-job.id>.out' and check the ssh command to type in a new local shell
+#### Open the file created 'slurm-<slurm-job.id>.out' and check the ssh command to type in a new local shell
 
-### Type the following in the browser and use your user name in the cluster as user name and as password `Totem`:
+#### Type the following in the browser and use your user name in the cluster as user name and as password `Totem`:
 `http://localhost:8787/`
 
